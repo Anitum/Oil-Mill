@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Oil Mill Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Camera Lock Option -->
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-end">
+            <button class="btn btn-primary">
+                <i class="fas fa-lock"></i> Lock Cameras
+            </button>
+        </div>
+    </div>
+
+    <!-- Graphs Section -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Graph 1</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Placeholder for graph 1 -->
+                    <div style="height: 300px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                        Graph 1 Placeholder
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Graph 2</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Placeholder for graph 2 -->
+                    <div style="height: 300px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
+                        Graph 2 Placeholder
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any JavaScript for graphs here
+</script>
+{% endblock %}
