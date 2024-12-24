@@ -47,98 +47,95 @@
                         </a>
                     </li>
                     
-                    <!-- Camera 1 - Production Monitoring -->
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'camera1.' in request.endpoint %}active{% endif %}" 
-                           href="{{ url_for('camera1.dashboard') }}">
-                            <i class="fas fa-industry"></i> 1
-                        </a>
-                    </li>
+<!-- Camera 1 - Production Monitoring -->
+<li class="nav-item">
+    <a class="nav-link {% if 'camera1.' in request.endpoint %}active{% endif %}" 
+       href="{{ url_for('camera1.dashboard') }}">
+        <i class="fas fa-camera"></i> Camera 1
+    </a>
+</li>
 
-                    <!-- Camera 2 - Quality Control -->
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'camera2.' in request.endpoint %}active{% endif %}" 
-                           href="#">
-                            <i class="fas fa-check-circle"></i> 2
-                        </a>
-                    </li>
+<!-- Camera 2 - Quality Control -->
+<li class="nav-item">
+    <a class="nav-link {% if 'camera2.' in request.endpoint %}active{% endif %}" 
+       href="{{ url_for('camera2.dashboard') }}">
+        <i class="fas fa-camera"></i> Camera 2
+    </a>
+</li>
 
-                    <!-- Camera 3 - Storage Monitoring -->
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'camera3.' in request.endpoint %}active{% endif %}" 
-                           href="#">
-                            <i class="fas fa-warehouse"></i> 3
-                        </a>
-                    </li>
+<!-- Camera 3 - Storage Monitoring -->
+<li class="nav-item">
+    <a class="nav-link {% if 'camera3.' in request.endpoint %}active{% endif %}" 
+       href="{{ url_for('camera3.dashboard') }}">
+        <i class="fas fa-camera"></i> Camera 3
+    </a>
+</li>
 
-                    <!-- Camera 4 - Process Control -->
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'camera4.' in request.endpoint %}active{% endif %}" 
-                           href="#">
-                            <i class="fas fa-cogs"></i> 4
-                        </a>
-                    </li>
+<!-- Camera 4 - Process Control -->
+<li class="nav-item">
+    <a class="nav-link {% if 'camera4.' in request.endpoint %}active{% endif %}" 
+       href="{{ url_for('camera4.dashboard') }}">
+        <i class="fas fa-camera"></i> Camera 4
+    </a>
+</li>
 
-                    <!-- Camera 5 - Safety Monitoring -->
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'camera5.' in request.endpoint %}active{% endif %}" 
-                           href="#">
-                            <i class="fas fa-shield-alt"></i> 5
-                        </a>
-                    </li>
+<!-- Camera 5 - Safety Monitoring -->
+<li class="nav-item">
+    <a class="nav-link {% if 'camera5.' in request.endpoint %}active{% endif %}" 
+       href="{{ url_for('camera5.dashboard') }}">
+        <i class="fas fa-camera"></i> Camera 5
+    </a>
+</li>
 
-                    <!-- Camera 6 - Packaging Area -->
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'camera6.' in request.endpoint %}active{% endif %}" 
-                           href="#">
-                            <i class="fas fa-box"></i> 6
-                        </a>
-                    </li>
+<!-- Camera 6 - Packaging Area -->
+<li class="nav-item">
+    <a class="nav-link {% if 'camera6.' in request.endpoint %}active{% endif %}" 
+       href="{{ url_for('camera6.dashboard') }}">
+        <i class="fas fa-camera"></i> Camera 6
+    </a>
+</li>
 
-                    <!-- Camera 7 - Loading Area -->
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'camera7.' in request.endpoint %}active{% endif %}" 
-                           href="#">
-                            <i class="fas fa-truck-loading"></i> 7
-                        </a>
-                    </li>
+<!-- Camera 7 - Loading Area -->
+<li class="nav-item">
+    <a class="nav-link {% if 'camera7.' in request.endpoint %}active{% endif %}" 
+       href="{{ url_for('camera7.dashboard') }}">
+        <i class="fas fa-camera"></i> Camera 7
+    </a>
+</li>
 
-                    <!-- Camera 8 - Raw Material Area -->
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'camera8.' in request.endpoint %}active{% endif %}" 
-                           href="#">
-                            <i class="fas fa-seedling"></i> 8
-                        </a>
-                    </li>
+<!-- Camera 8 - Raw Material Area -->
+<li class="nav-item">
+    <a class="nav-link {% if 'camera8.' in request.endpoint %}active{% endif %}" 
+       href="{{ url_for('camera8.dashboard') }}">
+        <i class="fas fa-camera"></i> Camera 8
+    </a>
+</li>
 
-                    <!-- Camera 9 - Worker Safety -->
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'camera9.' in request.endpoint %}active{% endif %}" 
-                           href="#">
-                            <i class="fas fa-hard-hat"></i> 9
-                        </a>
-                    </li>
+<!-- Camera 9 - Worker Safety -->
+<li class="nav-item">
+    <a class="nav-link {% if 'camera9.' in request.endpoint %}active{% endif %}" 
+       href="{{ url_for('camera9.dashboard') }}">
+        <i class="fas fa-camera"></i> Camera 9
+    </a>
+</li>
 
-                    <!-- Camera 10 - Maintenance -->
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'camera10.' in request.endpoint %}active{% endif %}" 
-                           href="#">
-                            <i class="fas fa-tools"></i> 10
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
+<!-- Camera 10 - Maintenance -->
+<li class="nav-item">
+    <a class="nav-link {% if 'camera10.' in request.endpoint %}active{% endif %}" 
+       href="{{ url_for('camera10.dashboard') }}">
+        <i class="fas fa-camera"></i> Camera 10
+    </a>
+</li></ul></div>
 		<!-- Main Content -->
 		
 		<div class="col-md-10 offset-md-2 main-content">
                 <!-- Top Navbar -->
                 <nav class="navbar navbar-expand-lg navbar-light">
                     <div class="container-fluid">
-                        <!-- Emergency Stop Button -->
+                        <!-- Emergency Stop Button
                         <button class="btn btn-danger me-3">
                             <i class="fas fa-stop-circle"></i> 
-                        </button>
+                        </button> -->
                         
 
                         <!-- Right-aligned items -->
