@@ -18,13 +18,10 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Graph 1</h5>
+                    <h5 class="card-title mb-0">Machine Usage</h5>
                 </div>
                 <div class="card-body">
-                    <!-- Placeholder for graph 1 -->
-                    <div style="height: 300px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
-                        Graph 1 Placeholder
-                    </div>
+                    <canvas id="graph1" style="height: 300px;"></canvas>
                 </div>
             </div>
         </div>
@@ -32,13 +29,10 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Graph 2</h5>
+                    <h5 class="card-title mb-0">Aggregrate People</h5>
                 </div>
                 <div class="card-body">
-                    <!-- Placeholder for graph 2 -->
-                    <div style="height: 300px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
-                        Graph 2 Placeholder
-                    </div>
+                    <canvas id="graph2" style="height: 300px;"></canvas>
                 </div>
             </div>
         </div>
@@ -47,7 +41,70 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Add any JavaScript for graphs here
+    const ctx1 = document.getElementById('graph1').getContext('2d');
+    new Chart(ctx1, {
+        type: 'bar',
+        data: {
+            labels: Array.from({ length: 30 }, (_, i) => (i + 1).toString()), 
+            datasets: [{
+                label: 'Production Volume (tons)',
+                data: [12, 19, 3, 5, 2, 10, 15, 7, 9, 14, 6, 8, 3, 12, 18, 20, 5, 6, 8, 10, 15, 19, 25, 30, 12, 8, 5, 10, 7, 3], 
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                },
+                tooltip: {
+                    enabled: true
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    const ctx2 = document.getElementById('graph2').getContext('2d');
+    new Chart(ctx2, {
+        type: 'line',
+        data: {
+            labels: ['January', 'February', 'March', 'April', 'May'],
+            datasets: [{
+                label: 'Aggregrate People',
+                data: [3000, 5000, 4000, 7000, 6000],
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 2,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                },
+                tooltip: {
+                    enabled: true
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
 </script>
 {% endblock %}
