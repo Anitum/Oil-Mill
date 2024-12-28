@@ -153,12 +153,7 @@
                     </li>
                     
 <!-- Camera 1 - Production Monitoring -->
-<li class="nav-item">
-    <a class="nav-link {% if 'camera1.' in request.endpoint %}active{% endif %}" 
-       href="{{ url_for('camera1.dashboard') }}">
-        <i class="fas fa-camera"></i> Camera 1
-    </a>
-</li>
+
 <li class="nav-item">
     <a class="nav-link {% if 'staff.' in request.endpoint %}active{% endif %}" 
        href="{{ url_for('staff.list_staff') }}">
