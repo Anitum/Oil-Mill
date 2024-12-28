@@ -151,6 +151,27 @@
                             <i class="fas fa-home"></i> Dashboard
                         </a>
                     </li>
+                    
+<!-- Camera 1 - Production Monitoring -->
+<li class="nav-item">
+    <a class="nav-link {% if 'camera1.' in request.endpoint %}active{% endif %}" 
+       href="{{ url_for('camera1.dashboard') }}">
+        <i class="fas fa-camera"></i> Camera 1
+    </a>
+</li>
+<li class="nav-item">
+    <a class="nav-link {% if 'staff.' in request.endpoint %}active{% endif %}" 
+       href="{{ url_for('staff.list_staff') }}">
+        <i class="fas fa-chalkboard-teacher"></i> Staff
+    </a>
+</li>
+                    <!-- Attendance -->
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'attendance.' in request.endpoint %}active{% endif %}" 
+                           href="{{ url_for('attendance.dashboard') }}">
+                            <i class="fas fa-calendar-check"></i> Attendance
+                        </a>
+                    </li>
 
                     <!-- Camera 1 - Production Monitoring -->
                     <li class="nav-item">
@@ -271,7 +292,7 @@
                         <!-- Right-aligned items -->
                         <ul class="navbar-nav ms-auto">
                             <!-- Alerts -->
-                            <li class="nav-item dropdown me-3">
+                            <!-- <li class="nav-item dropdown me-3">
                                 <a class="nav-link" href="#" role="button" data-bs-toggle="dropdown">
                                     <i class="fas fa-bell"></i>
                                     <span
@@ -291,7 +312,7 @@
                                         <div>Pressure Warning - Tank 2</div>
                                     </a>
                                 </div>
-                            </li>
+                            </li> -->
 
                             <!-- User Profile -->
                             <li class="nav-item dropdown">

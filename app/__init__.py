@@ -1,9 +1,12 @@
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate  # Import Flask-Migrate
 from config import Config
+import os
 
 # Initialize extensions
 db = SQLAlchemy()
+migrate = Migrate()  # Create a Migrate instance
 
 def create_app(config_class=Config):
     # Create Flask application
@@ -14,6 +17,7 @@ def create_app(config_class=Config):
     
     # Initialize extensions
     db.init_app(app)
+    migrate.init_app(app, db)  # Initialize Flask-Migrate with app and db
     
     # Import and register blueprints
     from app.routes.main import bp as main_bp
@@ -27,8 +31,10 @@ def create_app(config_class=Config):
     from app.routes.camera8 import bp as camera8_bp
     from app.routes.camera9 import bp as camera9_bp
     from app.routes.camera10 import bp as camera10_bp
-
-
+    from app.routes.staff import bp as staff_bp
+    app.register_blueprint(staff_bp, url_prefix='/staff')
+    from app.routes.attendance import bp as attendance_bp
+    app.register_blueprint(attendance_bp)
     
     # Register blueprints
     app.register_blueprint(main_bp)
@@ -43,9 +49,6 @@ def create_app(config_class=Config):
     app.register_blueprint(camera9_bp, url_prefix='/camera9')
     app.register_blueprint(camera10_bp, url_prefix='/camera10')
 
-
-
-    
     # Error handlers
     @app.errorhandler(404)
     def not_found_error(error):
@@ -55,6 +58,10 @@ def create_app(config_class=Config):
     def internal_error(error):
         db.session.rollback()
         return render_template('500.html'), 500
-    
-    return app
 
+    # Create necessary directories
+    os.makedirs(os.path.join(app.static_folder, 'uploads', 'staff'), exist_ok=True)
+    os.makedirs(os.path.join(app.static_folder, 'uploads', 'documents'), exist_ok=True)
+    os.makedirs(os.path.join(app.static_folder, 'uploads'), exist_ok=True)
+
+    return app
