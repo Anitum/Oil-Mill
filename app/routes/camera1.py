@@ -5,7 +5,7 @@ from app import db
 
 bp = Blueprint('camera1', __name__)
 
-@bp.route('/dashboard')
+@bp.route('/dashboard1')
 def dashboard():
     return render_template('camera1/Camera1.html')
 
