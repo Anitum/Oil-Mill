@@ -2,7 +2,7 @@ from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from config import Config
 
-# Initialize extensions
+# Initialize extensionsss
 db = SQLAlchemy()
 
 def create_app(config_class=Config):
@@ -27,7 +27,7 @@ def create_app(config_class=Config):
     from app.routes.camera8 import bp as camera8_bp
     from app.routes.camera9 import bp as camera9_bp
     from app.routes.camera10 import bp as camera10_bp
-
+    from app.routes.auth import auth
 
     
     # Register blueprints
@@ -42,6 +42,7 @@ def create_app(config_class=Config):
     app.register_blueprint(camera8_bp, url_prefix='/camera8')
     app.register_blueprint(camera9_bp, url_prefix='/camera9')
     app.register_blueprint(camera10_bp, url_prefix='/camera10')
+    app.register_blueprint(auth, url_prefix='/auth')
 
 
 
