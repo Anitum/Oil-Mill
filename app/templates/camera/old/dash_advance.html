@@ -1,0 +1,472 @@
+{% extends "base.html" %}
+
+{% block title %}Camera {{ camera_id }} - {{ machine_name }} Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-card {
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #eee;
+        padding: 1rem;
+    }
+
+    .card-title {
+        color: #2c3e50;
+        font-weight: 600;
+    }
+
+    .status-badge {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+    }
+
+    .control-button {
+        transition: all 0.3s ease;
+    }
+
+    .control-button:hover {
+        transform: scale(1.05);
+    }
+
+    .chart-container {
+        background-color: white;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .machine-info {
+        font-size: 1.1rem;
+        color: #6c757d;
+    }
+
+    .last-update {
+        font-size: 0.8rem;
+        color: #8895a7;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card dashboard-card">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-0">{{ machine_name }} Monitoring</h2>
+                        <p class="machine-info mb-0">Camera {{ camera_id }} | Zone A</p>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <span class="badge bg-success status-badge me-3" id="statusBadge">
+                            Status: Active
+                        </span>
+                        <div class="btn-group">
+                            <button class="btn btn-primary control-button" id="lockButton">
+                                <i class="fas fa-lock"></i> Lock Camera
+                            </button>
+                            <button class="btn btn-info control-button ms-2" id="settingsButton">
+                                <i class="fas fa-cog"></i> Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Content -->
+    <div class="row">
+        <!-- Live Feed -->
+        <div class="col-md-6 mb-4">
+            <div class="card dashboard-card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Live Feed</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            Last Hour
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">Last Hour</a></li>
+                            <li><a class="dropdown-item" href="#">Last 4 Hours</a></li>
+                            <li><a class="dropdown-item" href="#">Last 24 Hours</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="temperatureGraph" class="chart-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- People Count -->
+        <div class="col-md-6 mb-4">
+            <div class="card dashboard-card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">People Count</h5>
+                    <span class="last-update" id="peopleCountUpdate">Last updated: Just now</span>
+                </div>
+                <div class="card-body">
+                    <div id="pressureGraph" class="chart-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Machine Usage -->
+        <div class="col-md-6 mb-4">
+            <div class="card dashboard-card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Machine Usage</h5>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="alertToggle" checked>
+                        <label class="form-check-label" for="alertToggle">Alerts</label>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="flowRateGraph" class="chart-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Heat Map -->
+        <div class="col-md-6 mb-4">
+            <div class="card dashboard-card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Activity Heat Map</h5>
+                    <button class="btn btn-sm btn-outline-primary" id="refreshHeatmap">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="qualityGraph" class="chart-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Stats Row -->
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Total Runtime</h6>
+                    <h3 class="card-title mb-0" id="totalRuntime">23.5 hrs</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Efficiency Rate</h6>
+                    <h3 class="card-title mb-0" id="efficiencyRate">94.2%</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Alerts Today</h6>
+                    <h3 class="card-title mb-0" id="alertsCount">3</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card dashboard-card">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Next Maintenance</h6>
+                    <h3 class="card-title mb-0" id="nextMaintenance">2d 5h</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal fade" id="settingsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Camera Settings</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Resolution</label>
+                    <select class="form-select">
+                        <option>1080p</option>
+                        <option>720p</option>
+                        <option>480p</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Frame Rate</label>
+                    <select class="form-select">
+                        <option>30 fps</option>
+                        <option>24 fps</option>
+                        <option>15 fps</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Alert Threshold</label>
+                    <input type="range" class="form-range" min="0" max="100" value="75">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cameraId = {{ camera_id }};
+    let charts = {};
+    
+    // Initialize charts
+    function initializeCharts() {
+        // Live Feed Chart
+        charts.liveFeed = new ApexCharts(document.querySelector("#temperatureGraph"), {
+            chart: {
+                type: 'line',
+                height: 350,
+                animations: {
+                    enabled: true,
+                    easing: 'linear',
+                    dynamicAnimation: {
+                        speed: 1000
+                    }
+                },
+                toolbar: {
+                    show: true
+                }
+            },
+            stroke: {
+                curve: 'smooth',
+                width: 3
+            },
+            series: [{
+                name: 'Value',
+                data: []
+            }],
+            xaxis: {
+                type: 'category'
+            },
+            yaxis: {
+                labels: {
+                    formatter: function(val) {
+                        return val.toFixed(2);
+                    }
+                }
+            },
+            tooltip: {
+                x: {
+                    format: 'HH:mm'
+                }
+            },
+            theme: {
+                palette: 'palette1'
+            }
+        });
+        charts.liveFeed.render();
+
+        // People Count Chart
+        charts.peopleCount = new ApexCharts(document.querySelector("#pressureGraph"), {
+            chart: {
+                type: 'bar',
+                height: 350,
+                toolbar: {
+                    show: true
+                }
+            },
+            series: [{
+                name: 'People',
+                data: []
+            }],
+            xaxis: {
+                type: 'category'
+            },
+            plotOptions: {
+                bar: {
+                    borderRadius: 4,
+                    horizontal: false,
+                }
+            },
+            dataLabels: {
+                enabled: false
+            },
+            fill: {
+                opacity: 0.8
+            }
+        });
+        charts.peopleCount.render();
+
+        // Machine Usage Gauge
+        charts.machineUsage = new ApexCharts(document.querySelector("#flowRateGraph"), {
+            chart: {
+                type: 'radialBar',
+                height: 350
+            },
+            series: [0],
+            labels: ['Usage %'],
+            plotOptions: {
+                radialBar: {
+                    hollow: {
+                        size: '70%',
+                    },
+                    dataLabels: {
+                        show: true,
+                        name: {
+                            offsetY: -10,
+                            show: true,
+                            color: '#888',
+                            fontSize: '17px'
+                        },
+                        value: {
+                            color: '#111',
+                            fontSize: '36px',
+                            show: true,
+                        }
+                    }
+                }
+            }
+        });
+        charts.machineUsage.render();
+
+        // Heatmap
+        charts.heatmap = new ApexCharts(document.querySelector("#qualityGraph"), {
+            chart: {
+                type: 'heatmap',
+                height: 350,
+                toolbar: {
+                    show: true
+                }
+            },
+            series: [],
+            plotOptions: {
+                heatmap: {
+                    colorScale: {
+                        ranges: [{
+                            from: 0,
+                            to: 20,
+                            color: '#D5F5E3',
+                            name: 'low',
+                        }, {
+                            from: 21,
+                            to: 50,
+                            color: '#82E0AA',
+                            name: 'medium',
+                        }, {
+                            from: 51,
+                            to: 80,
+                            color: '#28B463',
+                            name: 'high',
+                        }, {
+                            from: 81,
+                            to: 100,
+                            color: '#145A32',
+                            name: 'extreme',
+                        }]
+                    }
+                }
+            }
+        });
+        charts.heatmap.render();
+    }
+
+    // Update charts with new data
+    function updateCharts(data) {
+        charts.liveFeed.updateSeries([{
+            data: data.live_feed.feed_rate.map((value, index) => ({
+                x: data.live_feed.timestamps[index],
+                y: value
+            }))
+        }]);
+
+        charts.peopleCount.updateSeries([{
+            data: data.people_count.count.map((value, index) => ({
+                x: data.people_count.timestamps[index],
+                y: value
+            }))
+        }]);
+
+        charts.machineUsage.updateSeries([data.machine_usage]);
+
+        charts.heatmap.updateSeries(
+            data.heatmap_data.map((row, i) => ({
+                name: `Row ${i+1}`,
+                data: row.map((value, j) => ({
+                    x: `Col ${j+1}`,
+                    y: value
+                }))
+            }))
+        );
+    }
+
+    // Initialize charts
+    initializeCharts();
+
+    // Update data periodically
+    function updateData() {
+        fetch(`/camera${cameraId}/data`)
+            .then(response => response.json())
+            .then(data => {
+                updateCharts(data);
+            });
+    }
+
+    // Update status
+    function updateStatus() {
+        fetch(`/camera${cameraId}/status`)
+            .then(response => response.json())
+            .then(data => {
+                const statusBadge = document.querySelector('#statusBadge');
+                statusBadge.className = `badge status-badge me-3 bg-${data.status === 'ACTIVE' ? 'success' : 'danger'}`;
+                statusBadge.textContent = `Status: ${data.status}`;
+            });
+    }
+
+    // Event Listeners
+    document.querySelector('#lockButton').addEventListener('click', function() {
+        this.classList.toggle('btn-danger');
+        this.querySelector('i').classList.toggle('fa-lock');
+        this.querySelector('i').classList.toggle('fa-lock-open');
+    });
+
+    document.querySelector('#settingsButton').addEventListener('click', function() {
+        new bootstrap.Modal(document.querySelector('#settingsModal')).show();
+    });
+
+    document.querySelector('#refreshHeatmap').addEventListener('click', function() {
+        this.querySelector('i').classList.add('fa-spin');
+        setTimeout(() => {
+            this.querySelector('i').classList.remove('fa-spin');
+            updateData();
+        }, 1000);
+    });
+
+    // Initial load
+    updateData();
+    updateStatus();
+
+    // Set up periodic updates
+    setInterval(updateData, 5000);   // Every 5 seconds
+    setInterval(updateStatus, 10000); // Every 10 seconds
+});
+</script>
+{% endblock %}

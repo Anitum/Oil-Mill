@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Camera {{ camera_id }} Dashboard - Oil Mill Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Camera Status and Controls -->
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <h2>Camera {{ camera_id }} Monitoring</h2>
+            <div>
+                <span class="badge bg-success me-2">Status: Active</span>
+                <button class="btn btn-primary">
+                    <i class="fas fa-lock"></i> Lock Camera
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Graphs Row -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Live Feed</h5>
+                </div>
+                <div class="card-body">
+                    <div id="temperatureGraph" style="height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Aggregate People</h5>
+                </div>
+                <div class="card-body">
+                    <div id="pressureGraph" style="height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Graphs Row -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Machine Usage</h5>
+                </div>
+                <div class="card-body">
+                    <div id="flowRateGraph" style="height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">HeatMap</h5>
+                </div>
+                <div class="card-body">
+                    <div id="qualityGraph" style="height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cameraId = {{ camera_id }};
+    
+    // Function to update graphs
+    function updateGraphs() {
+        fetch(`/camera${cameraId}/data`)
+            .then(response => response.json())
+            .then(data => {
+                // Update your graphs here with the data
+                // Example: updateTemperatureGraph(data.temperature)
+            });
+    }
+
+    // Update status
+    function updateStatus() {
+        fetch(`/camera${cameraId}/status`)
+            .then(response => response.json())
+            .then(data => {
+                // Update status indicators
+            });
+    }
+
+    // Initial load
+    updateGraphs();
+    updateStatus();
+
+    // Set up periodic updates
+    setInterval(updateGraphs, 5000);  // Every 5 seconds
+    setInterval(updateStatus, 10000); // Every 10 seconds
+});
+</script>
+{% endblock %}
