@@ -94,6 +94,10 @@
 {% endblock %}
 
 {% block content %}
+<!--Heading-->
+<div class="container-fluid py-3">
+    <h1 class="text-center">Oil Mill Dashboard</h1>
+</div>
 <div class="container-fluid py-3">
     <!-- Camera Controls - Small circles at top -->
     <div class="camera-controls">
@@ -201,14 +205,15 @@ async function initPeopleChart() {
 }
 
 // Initialize machine usage chart
+
 async function initMachineChart() {
     const response = await fetch('/api/machine-usage');
     const data = await response.json();
     
-    const machines = Object.values(data.machines);
-    const latestUsage = machines.map(m => ({
-        name: m.name.split(' ')[0], // Shorter names
-        usage: m.usage_data[m.usage_data.length - 1].usage_minutes
+    const areas = Object.keys(data.data[0].by_area);
+    const latestUsage = areas.map(area => ({
+        name: area,
+        usage: data.data[data.data.length - 1].by_area[area]
     }));
 
     const ctx = document.getElementById('machineChart').getContext('2d');
@@ -245,7 +250,6 @@ async function initMachineChart() {
         }
     });
 }
-
 // Initialize activity chart
 async function initActivityChart() {
     const response = await fetch('/api/activity-data');
