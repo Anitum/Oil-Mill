@@ -1,0 +1,68 @@
+{
+  "last_updated": "2025-02-03T10:30:00",
+  "cameras": {
+    "101": {
+      "id": "101",
+      "name": "Attendance Camera",
+      "location": "Main Entrance",
+      "status": "inactive",
+      "last_active": "2025-02-01T18:00:00",
+      "maintenance_required": true,
+      "type": "attendance"
+    },
+    "201": {
+      "id": "201",
+      "name": "Lobby Camera",
+      "location": "Lobby/Sitting Area",
+      "status": "active",
+      "last_active": "2025-02-03T10:30:00",
+      "maintenance_required": false,
+      "type": "monitoring"
+    },
+    "301": {
+      "id": "301",
+      "name": "Loading Station Camera",
+      "location": "Raw Material Loading",
+      "status": "active",
+      "last_active": "2025-02-03T10:30:00",
+      "maintenance_required": false,
+      "type": "loading"
+    },
+    "401": {
+      "id": "401",
+      "name": "Backyard Camera",
+      "location": "Backyard",
+      "status": "active",
+      "last_active": "2025-02-03T10:30:00",
+      "maintenance_required": false,
+      "type": "monitoring"
+    },
+    "501": {
+      "id": "501",
+      "name": "Filter Area Camera",
+      "location": "Filter Section",
+      "status": "active",
+      "last_active": "2025-02-03T10:30:00",
+      "maintenance_required": false,
+      "type": "production"
+    },
+    "601": {
+      "id": "601",
+      "name": "Production Camera",
+      "location": "Production Area",
+      "status": "active",
+      "last_active": "2025-02-03T10:30:00",
+      "maintenance_required": false,
+      "type": "production"
+    },
+    "701": {
+      "id": "701",
+      "name": "Filling Station Camera",
+      "location": "Filling Station",
+      "status": "active",
+      "last_active": "2025-02-03T10:30:00",
+      "maintenance_required": false,
+      "type": "filling"
+    }
+  }
+}

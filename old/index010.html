@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Oil Mill Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+.camera-controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 0.5rem;
+    z-index: 1000;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+}
+
+.camera-btn {
+    min-width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.camera-active {
+    background-color: #28a745;
+    color: white;
+}
+
+.camera-inactive {
+    background-color: #dc3545;
+    color: white;
+}
+
+.camera-disabled {
+    background-color: #6c757d;
+    color: white;
+    cursor: not-allowed;
+}
+
+.chart-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 1rem;
+    padding: 1rem;
+}
+
+.chart-title {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    color: #495057;
+}
+
+@media (max-width: 768px) {
+    .chart-container {
+        margin-bottom: 0.5rem;
+        padding: 0.5rem;
+    }
+    
+    .camera-controls {
+        padding: 0.25rem;
+    }
+    
+    .camera-btn {
+        min-width: 35px;
+        height: 35px;
+        font-size: 0.7rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3 mb-5">
+    <!-- Charts Grid -->
+    <div class="row g-3">
+        <!-- People Count Chart -->
+        <div class="col-12">
+            <div class="chart-container">
+                <h3 class="chart-title">Aggregate People Count</h3>
+                <canvas id="peopleChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Machine Usage Chart -->
+        <div class="col-md-6">
+            <div class="chart-container">
+                <h3 class="chart-title">Machine Usage</h3>
+                <canvas id="machineChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Activity Chart -->
+        <div class="col-md-6">
+            <div class="chart-container">
+                <h3 class="chart-title">Activity Overview</h3>
+                <canvas id="activityChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Camera Controls -->
+    <div class="camera-controls">
+        {% for camera in cameras %}
+        <button class="camera-btn camera-{{ camera.status }}"
+                onclick="toggleCamera('{{ camera.id }}')"
+                id="camera-{{ camera.id }}"
+                title="{{ camera.name }}">
+            {{ camera.id }}
+        </button>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Chart instances
+let charts = {};
+
+// Initialize charts with server-side data
+function initCharts() {
+    // People Count Chart
+    charts.people = new Chart(document.getElementById('peopleChart').getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: {{ people_data.labels | tojson }},
+            datasets: [{
+                label: 'Total People',
+                data: {{ people_data.values | tojson }},
+                borderColor: '#007bff',
+                tension: 0.1,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        maxTicksLimit: 5
+                    }
+                }
+            }
+        }
+    });
+
+    // Machine Usage Chart
+    charts.machine = new Chart(document.getElementById('machineChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: {{ machine_data.labels | tojson }},
+            datasets: [{
+                label: 'Usage (minutes)',
+                data: {{ machine_data.values | tojson }},
+                backgroundColor: '#28a745'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+
+    // Activity Chart
+    charts.activity = new Chart(document.getElementById('activityChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: {{ activity_data.labels | tojson }},
+            datasets: [{
+                label: 'Activity Count',
+                data: {{ activity_data.values | tojson }},
+                backgroundColor: '#17a2b8'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+}
+
+// Toggle camera status
+async function toggleCamera(cameraId) {
+    try {
+        const response = await fetch(`/api/toggle-camera/${cameraId}`, {
+            method: 'POST'
+        });
+        const data = await response.json();
+        if (data.success) {
+            const btn = document.getElementById(`camera-${cameraId}`);
+            btn.className = `camera-btn camera-${data.new_status}`;
+        }
+    } catch (error) {
+        console.error('Error toggling camera:', error);
+    }
+}
+
+// Update charts with new data
+async function updateData() {
+    try {
+        const response = await fetch('/api/update-data');
+        const data = await response.json();
+        
+        // Update people chart
+        charts.people.data.labels = data.people.labels;
+        charts.people.data.datasets[0].data = data.people.values;
+        charts.people.update();
+        
+        // Update machine chart
+        charts.machine.data.labels = data.machine.labels;
+        charts.machine.data.datasets[0].data = data.machine.values;
+        charts.machine.update();
+        
+        // Update activity chart
+        charts.activity.data.labels = data.activity.labels;
+        charts.activity.data.datasets[0].data = data.activity.values;
+        charts.activity.update();
+    } catch (error) {
+        console.error('Error updating data:', error);
+    }
+}
+
+// Initialize dashboard
+document.addEventListener('DOMContentLoaded', () => {
+    initCharts();
+    // Update data every 30 seconds
+    setInterval(updateData, 30000);
+});
+</script>
+{% endblock %}
