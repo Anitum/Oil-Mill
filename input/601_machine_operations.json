@@ -1,0 +1,57 @@
+{
+  "last_updated": "2025-02-03T10:30:00",
+  "channel": "601",
+  "machines": {
+    "machine_1_2": {
+      "daily_summary": {
+        "date": "2025-02-03",
+        "total_runtime_hours": 16,
+        "efficiency": 0.93,
+        "maintenance_status": "normal"
+      },
+      "hourly_data": [
+        {
+          "timestamp": "2025-02-03T06:00:00",
+          "runtime_minutes": 58,
+          "efficiency": 0.95,
+          "temperature": 42,
+          "pressure": 2.4
+        }
+      ]
+    },
+    "machine_2_3": {
+      "daily_summary": {
+        "date": "2025-02-03",
+        "total_runtime_hours": 15,
+        "efficiency": 0.91,
+        "maintenance_status": "normal"
+      },
+      "hourly_data": [
+        {
+          "timestamp": "2025-02-03T06:00:00",
+          "runtime_minutes": 55,
+          "efficiency": 0.92,
+          "temperature": 41,
+          "pressure": 2.3
+        }
+      ]
+    },
+    "machine_3_4": {
+      "daily_summary": {
+        "date": "2025-02-03",
+        "total_runtime_hours": 14,
+        "efficiency": 0.94,
+        "maintenance_status": "maintenance_needed"
+      },
+      "hourly_data": [
+        {
+          "timestamp": "2025-02-03T06:00:00",
+          "runtime_minutes": 56,
+          "efficiency": 0.93,
+          "temperature": 43,
+          "pressure": 2.5
+        }
+      ]
+    }
+  }
+}

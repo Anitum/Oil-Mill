@@ -1,0 +1,39 @@
+{
+  "last_updated": "2025-02-03T10:30:00",
+  "channel": "701",
+  "filling_operations": {
+    "daily_summary": {
+      "date": "2025-02-03",
+      "total_liters": 25000,
+      "total_containers": 500,
+      "efficiency": 0.96
+    },
+    "hourly_data": [
+      {
+        "timestamp": "2025-02-03T06:00:00",
+        "containers_filled": 125,
+        "total_liters": 6250,
+        "efficiency": 0.97,
+        "average_fill_time": 28,
+        "quality_checks_passed": 125
+      },
+      {
+        "timestamp": "2025-02-03T07:00:00",
+        "containers_filled": 122,
+        "total_liters": 6100,
+        "efficiency": 0.95,
+        "average_fill_time": 29,
+        "quality_checks_passed": 120
+      }
+    ],
+    "detailed_operations": [
+      {
+        "operation_id": "F789",
+        "timestamp": "2025-02-03T06:15:00",
+        "container_size": "50L",
+        "fill_time": 28,
+        "quality_check": "passed"
+      }
+    ]
+  }
+}

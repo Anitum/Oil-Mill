@@ -1,0 +1,28 @@
+{
+  "last_updated": "2025-02-03T10:30:00",
+  "channel": "501",
+  "filter_operations": {
+    "daily_summary": {
+      "date": "2025-02-03",
+      "total_filtration_hours": 18,
+      "efficiency": 0.95,
+      "maintenance_alerts": []
+    },
+    "hourly_data": [
+      {
+        "timestamp": "2025-02-03T06:00:00",
+        "active_time_minutes": 58,
+        "pressure_reading": 2.4,
+        "efficiency": 0.96,
+        "throughput_liters": 2500
+      },
+      {
+        "timestamp": "2025-02-03T07:00:00",
+        "active_time_minutes": 55,
+        "pressure_reading": 2.5,
+        "efficiency": 0.94,
+        "throughput_liters": 2400
+      }
+    ]
+  }
+}

@@ -9,6 +9,6 @@ def register_blueprints(app):
     app.register_blueprint(bp)
 
     # Register camera blueprints dynamically
-    for camera_id in range(1, 12):  # For cameras 1-8
+    for camera_id in [101,201,301,401,501,601,701,801,901]:  # For cameras 1-8
         bp = create_camera_blueprint(camera_id)
         app.register_blueprint(bp, url_prefix=f'/camera{camera_id}')

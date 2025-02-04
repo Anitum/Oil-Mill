@@ -1,0 +1,31 @@
+{
+  "last_updated": "2025-02-03T10:30:00",
+  "channel": "301",
+  "interval": "hourly",
+  "data": [
+    {
+      "timestamp": "2025-02-03T06:00:00",
+      "count": 3,
+      "zone_distribution": {
+        "loading_area": 2,
+        "walkway": 1
+      },
+      "geofence_alerts": []
+    },
+    {
+      "timestamp": "2025-02-03T07:00:00",
+      "count": 4,
+      "zone_distribution": {
+        "loading_area": 3,
+        "walkway": 1
+      },
+      "geofence_alerts": [
+        {
+          "time": "2025-02-03T07:45:00",
+          "zone": "restricted_area",
+          "severity": "warning"
+        }
+      ]
+    }
+  ]
+}

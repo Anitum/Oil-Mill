@@ -1,0 +1,38 @@
+{
+  "last_updated": "2025-02-03T10:30:00",
+  "channel": "301",
+  "operations": {
+    "daily_summary": {
+      "date": "2025-02-03",
+      "total_operations": 24,
+      "total_duration_minutes": 480,
+      "efficiency": 0.92
+    },
+    "hourly_data": [
+      {
+        "timestamp": "2025-02-03T06:00:00",
+        "operations_count": 6,
+        "total_duration_minutes": 120,
+        "average_pour_time": 20,
+        "efficiency": 0.94
+      },
+      {
+        "timestamp": "2025-02-03T07:00:00",
+        "operations_count": 7,
+        "total_duration_minutes": 140,
+        "average_pour_time": 20,
+        "efficiency": 0.91
+      }
+    ],
+    "detailed_operations": [
+      {
+        "operation_id": "P123",
+        "start_time": "2025-02-03T06:15:00",
+        "end_time": "2025-02-03T06:35:00",
+        "duration_minutes": 20,
+        "material_type": "raw_oil",
+        "quantity_kg": 500
+      }
+    ]
+  }
+}
