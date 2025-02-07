@@ -62,7 +62,7 @@ def process_cctv_directory(directory_path):
             # Skip empty files
             if csv_path.stat().st_size == 0:
                 logging.warning(f"Empty file found and will be deleted: {csv_path}")
-                os.remove(str(csv_path))
+                # os.remove(str(csv_path))
                 empty_count += 1
                 continue
                 
@@ -71,7 +71,7 @@ def process_cctv_directory(directory_path):
             
             if len(df) == 0:
                 logging.warning(f"File with no data found and will be deleted: {csv_path}")
-                os.remove(str(csv_path))
+                # os.remove(str(csv_path))
                 empty_count += 1
                 continue
             
@@ -103,7 +103,7 @@ def process_cctv_directory(directory_path):
                     logging.debug(f"Activity detected in {area['name']}: {csv_path.name}")
             
             # Delete processed file
-            os.remove(str(csv_path))
+            # os.remove(str(csv_path))
             processed_count += 1
             
             # Log progress every 100 files
@@ -151,7 +151,7 @@ def process_cctv_directory(directory_path):
 
 if __name__ == "__main__":
     try:
-        directory = r"/home/mridul/Oil-Mill/testing/s3_results/s3_results"
+        directory = r"/home/ubuntu/processing"
         logging.info(f"Starting script with directory: {directory}")
         
         results = process_cctv_directory(directory)

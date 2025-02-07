@@ -111,7 +111,7 @@ def apply_gaussian_overlay(heatmap, x, y, resolution, weight, radius=20):
         logging.error(f"Error applying Gaussian overlay at ({x}, {y}): {e}")
 
 def create_channel_heatmaps(start_time=None, end_time=None, hours_ago=None, 
-                          time_decay=0.9, photo_path="Photo", results_path="Results"):
+                          time_decay=0.9, photo_path="/home/ubuntu/Oil-Mill/Photo", results_path="/home/ubuntu/processing"):
     """Create heatmaps for each channel using data from specified time period"""
     logging.info("Starting heatmap creation process")
     
@@ -275,9 +275,8 @@ if __name__ == "__main__":
     end_time = datetime(2024, 12, 29, 8, 0)    # 29/12/24 8:00 AM
 
     channel_heatmaps = create_channel_heatmaps(
-        start_time=start_time,
-        end_time=end_time,
+        hours_ago=10,
         time_decay=0.95
     )
     
-    plot_channel_heatmaps(channel_heatmaps, save_dir='heatmap_outputs')
+    plot_channel_heatmaps(channel_heatmaps, save_dir='/home/ubuntu/Oil-Mill/app/heatmap_outputs')

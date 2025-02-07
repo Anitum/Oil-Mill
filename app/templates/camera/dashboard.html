@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize Charts
     const peopleCountChart = new ApexCharts(document.getElementById('peopleCountChart'), {
         chart: {
-            type: 'line',
+            type: 'scatter',
             height: 300,
             animations: {
                 enabled: true
@@ -228,6 +228,17 @@ document.addEventListener('DOMContentLoaded', function() {
             labels: {
                 formatter: function(val) {
                     return Math.round(val);
+                }
+            }
+        },
+        tooltip: {
+            x: {
+                format: 'dd MMM yyyy HH:mm:ss' // This adds date and time format to tooltip
+            },
+        
+            y: {
+                formatter: function(val) {
+                    return Math.round(val) + ' people';
                 }
             }
         }

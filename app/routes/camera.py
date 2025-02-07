@@ -38,84 +38,107 @@ def create_camera_blueprint(camera_id):
         return render_template('camera/dashboard.html',  # Updated template path
                              camera_id=camera_id,
                              machine_name=machine_name)
-
+    
+    
+    
+    
+    
     @bp.route('/data')
     def get_data():
         try:
             # Read people detection data from file_counts.csv
             people_df = pd.read_csv('input/file_counts.csv')
-            people_data = []
-
-            # Filter for current camera
+            
+            # Filter for current camera and create timestamp column
             camera_prefix = f'channel{camera_id}'
-            camera_df = people_df[people_df['file_name'].str.startswith(camera_prefix)]
-
-            for _, row in camera_df.iterrows():
-                # Updated timestamp parsing
-                timestamp = datetime.strptime(
-                    row['file_name'].split('_')[1], 
-                    '%Y%m%dT%H%M%S'  # Changed format string
-                ).strftime('%Y-%m-%d %H:%M:%S')
-                people_data.append({timestamp: round(row['count'])})
-
+            camera_df = people_df[people_df['file_name'].str.startswith(camera_prefix)].copy()
+            
+            # Extract timestamp more efficiently
+            camera_df['timestamp'] = pd.to_datetime(
+                camera_df['file_name'].str.split('_').str[1],
+                format='%Y%m%dT%H%M%S'
+            )
+            
+            # Sort by timestamp and convert to desired format
+            camera_df = camera_df.sort_values('timestamp')
+            people_data = [
+                {ts.strftime('%Y-%m-%d %H:%M:%S'): round(count)} 
+                for ts, count in zip(camera_df['timestamp'], camera_df['count'])
+            ]
+    
             # Get operation data based on camera
             operation_data = []
             if str(camera_id) == '301':
                 op_df = pd.read_csv('input/Pouring_raw_Material.csv')
-                for _, row in op_df.iterrows():
-                    timestamp = datetime.strptime(
-                        row['Filename'].split('_')[1], 
-                        '%Y%m%dT%H%M%S'  # Changed format string
-                    ).strftime('%Y-%m-%d %H:%M:%S')
-                    operation_data.append({timestamp: 1})
-
+                op_df['timestamp'] = pd.to_datetime(
+                    op_df['Filename'].str.split('_').str[1],
+                    format='%Y%m%dT%H%M%S'
+                )
+                op_df = op_df.sort_values('timestamp')
+                operation_data = [
+                    {ts.strftime('%Y-%m-%d %H:%M:%S'): 1} 
+                    for ts in op_df['timestamp']
+                ]
+    
             elif str(camera_id) == '701':
                 op_df = pd.read_csv('input/Oil_can_Filling.csv')
-                for _, row in op_df.iterrows():
-                    timestamp = datetime.strptime(
-                        row['Filename'].split('_')[1], 
-                        '%Y%m%dT%H%M%S'  # Changed format string
-                    ).strftime('%Y-%m-%d %H:%M:%S')
-                    operation_data.append({timestamp: 1})
-
+                op_df['timestamp'] = pd.to_datetime(
+                    op_df['Filename'].str.split('_').str[1],
+                    format='%Y%m%dT%H%M%S'
+                )
+                op_df = op_df.sort_values('timestamp')
+                operation_data = [
+                    {ts.strftime('%Y-%m-%d %H:%M:%S'): 1} 
+                    for ts in op_df['timestamp']
+                ]
+    
             # Special handling for camera 601
             machine_data = {}
             if str(camera_id) == '601':
+                all_timestamps = set()
+                
                 for machine in ['Mill1-2', 'Mill2-3', 'Mill3-4']:
                     df = pd.read_csv(f'input/{machine}.csv')
-                    data = []
-                    for _, row in df.iterrows():
-                        timestamp = datetime.strptime(
-                            row['Filename'].split('_')[1], 
-                            '%Y%m%dT%H%M%S'  # Changed format string
-                        ).strftime('%Y-%m-%d %H:%M:%S')
-                        data.append({timestamp: 1})
+                    df['timestamp'] = pd.to_datetime(
+                        df['Filename'].str.split('_').str[1],
+                        format='%Y%m%dT%H%M%S'
+                    )
+                    df = df.sort_values('timestamp')
+                    
+                    data = [
+                        {ts.strftime('%Y-%m-%d %H:%M:%S'): 1} 
+                        for ts in df['timestamp']
+                    ]
                     machine_data[machine.lower().replace('-', '_')] = {'data': data}
-
-                # Calculate usage data from all machine CSVs
+                    
+                    # Collect timestamps for usage calculation
+                    all_timestamps.update(ts.strftime('%Y-%m-%d %H:%M:%S') for ts in df['timestamp'])
+    
+                # Calculate usage data
                 if machine_data:
-                    all_timestamps = set()
-                    for m_data in machine_data.values():
-                        for entry in m_data['data']:
-                            all_timestamps.update(entry.keys())
-
-                    usage_data = []
-                    for ts in sorted(all_timestamps):
-                        usage_data.append({ts: 1})
+                    usage_data = [
+                        {ts: 1} for ts in sorted(all_timestamps)
+                    ]
                     machine_data['usage'] = {'data': usage_data}
-
+    
             return jsonify({
                 'people_data': people_data,
                 'operation_data': operation_data,
                 'machine_data': machine_data
             })
+        
         except Exception as e:
             print(f"Error in get_data: {str(e)}")
             return jsonify({
                 'people_data': [],
                 'operation_data': [],
                 'machine_data': {}
-            })
+            })  
+    
+    
+    
+
+
 
     @bp.route('/heatmap')
     def get_heatmap():
