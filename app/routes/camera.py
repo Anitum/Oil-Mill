@@ -35,23 +35,26 @@ def create_camera_blueprint(camera_id):
     @bp.route('/dashboard')
     def dashboard():
         machine_name = MACHINES.get(str(camera_id), 'Unknown Machine')
-        return render_template('camera/dashboard.html',  # Updated template path
+        return render_template('camera/dashboard.html',
                              camera_id=camera_id,
                              machine_name=machine_name)
-    
-    
-    
-    
-    
+
     @bp.route('/data')
     def get_data():
         try:
+            print(f"\n{'='*50}")
+            print(f"Processing data for camera {camera_id}")
+            print(f"{'='*50}")
+            
             # Read people detection data from file_counts.csv
+            print("\nReading people detection data...")
             people_df = pd.read_csv('input/file_counts.csv')
+            print(f"Found {len(people_df)} total records in file_counts.csv")
             
             # Filter for current camera and create timestamp column
             camera_prefix = f'channel{camera_id}'
             camera_df = people_df[people_df['file_name'].str.startswith(camera_prefix)].copy()
+            print(f"Filtered {len(camera_df)} records for camera {camera_id}")
             
             # Extract timestamp more efficiently
             camera_df['timestamp'] = pd.to_datetime(
@@ -65,22 +68,57 @@ def create_camera_blueprint(camera_id):
                 {ts.strftime('%Y-%m-%d %H:%M:%S'): round(count)} 
                 for ts, count in zip(camera_df['timestamp'], camera_df['count'])
             ]
+            print(f"Processed {len(people_data)} people detection records")
     
             # Get operation data based on camera
             operation_data = []
+            machine_data = {}
+
             if str(camera_id) == '301':
-                op_df = pd.read_csv('input/Pouring_raw_Material.csv')
-                op_df['timestamp'] = pd.to_datetime(
-                    op_df['Filename'].str.split('_').str[1],
-                    format='%Y%m%dT%H%M%S'
-                )
-                op_df = op_df.sort_values('timestamp')
-                operation_data = [
-                    {ts.strftime('%Y-%m-%d %H:%M:%S'): 1} 
-                    for ts in op_df['timestamp']
-                ]
+                print("\nProcessing camera 301 (Pouring System)...")
+                print("Reading Pouring_raw_Material.csv...")
+                
+                try:
+                    op_df = pd.read_csv('input/Pouring_raw_Material.csv')
+                    print(f"Raw CSV content (first few rows):")
+                    print(op_df.head())
+                    print(f"\nColumns in CSV: {op_df.columns.tolist()}")
+                    
+                    print("\nConverting timestamps...")
+                    op_df['timestamp'] = pd.to_datetime(
+                        op_df['Filename'].str.split('_').str[1],
+                        format='%Y%m%dT%H%M%S'
+                    )
+                    op_df = op_df.sort_values('timestamp')
+                    
+                    print(f"Processed timestamps. Total records: {len(op_df)}")
+                    
+                    operation_data = [
+                        {ts.strftime('%Y-%m-%d %H:%M:%S'): 1} 
+                        for ts in op_df['timestamp']
+                    ]
+                    print(f"Created {len(operation_data)} operation data records")
+                    
+                    # Add machine usage data for camera 301
+                    usage_data = [
+                        {ts.strftime('%Y-%m-%d %H:%M:%S'): 1} 
+                        for ts in op_df['timestamp']
+                    ]
+                    machine_data['usage'] = {'data': usage_data}
+                    print(f"Created {len(usage_data)} usage data records")
+                    
+                    print("\nSample of machine_data:")
+                    print(f"Keys in machine_data: {list(machine_data.keys())}")
+                    if usage_data:
+                        print("First usage data entry:", usage_data[0])
+                    
+                except Exception as e:
+                    print(f"Error processing Pouring_raw_Material.csv: {str(e)}")
+                    print(f"Current working directory: {os.getcwd()}")
+                    print(f"Files in input directory: {os.listdir('input')}")
     
             elif str(camera_id) == '701':
+                print("\nProcessing camera 701 (Filling System)...")
                 op_df = pd.read_csv('input/Oil_can_Filling.csv')
                 op_df['timestamp'] = pd.to_datetime(
                     op_df['Filename'].str.split('_').str[1],
@@ -91,13 +129,14 @@ def create_camera_blueprint(camera_id):
                     {ts.strftime('%Y-%m-%d %H:%M:%S'): 1} 
                     for ts in op_df['timestamp']
                 ]
+                print(f"Processed {len(operation_data)} operation data records")
     
-            # Special handling for camera 601
-            machine_data = {}
-            if str(camera_id) == '601':
+            elif str(camera_id) == '601':
+                print("\nProcessing camera 601 (Machine Control)...")
                 all_timestamps = set()
                 
                 for machine in ['Mill1-2', 'Mill2-3', 'Mill3-4']:
+                    print(f"\nProcessing {machine}...")
                     df = pd.read_csv(f'input/{machine}.csv')
                     df['timestamp'] = pd.to_datetime(
                         df['Filename'].str.split('_').str[1],
@@ -110,53 +149,55 @@ def create_camera_blueprint(camera_id):
                         for ts in df['timestamp']
                     ]
                     machine_data[machine.lower().replace('-', '_')] = {'data': data}
+                    print(f"Added {len(data)} records for {machine}")
                     
-                    # Collect timestamps for usage calculation
                     all_timestamps.update(ts.strftime('%Y-%m-%d %H:%M:%S') for ts in df['timestamp'])
     
-                # Calculate usage data
                 if machine_data:
                     usage_data = [
                         {ts: 1} for ts in sorted(all_timestamps)
                     ]
                     machine_data['usage'] = {'data': usage_data}
-    
-            return jsonify({
+                    print(f"\nCreated usage data with {len(usage_data)} records")
+
+            print("\nFinal data summary:")
+            print(f"People data records: {len(people_data)}")
+            print(f"Operation data records: {len(operation_data)}")
+            print(f"Machine data keys: {list(machine_data.keys())}")
+            
+            response_data = {
                 'people_data': people_data,
                 'operation_data': operation_data,
                 'machine_data': machine_data
-            })
+            }
+            print("\nSending response...")
+            return jsonify(response_data)
         
         except Exception as e:
-            print(f"Error in get_data: {str(e)}")
+            print(f"\nERROR in get_data: {str(e)}")
+            print(f"Error type: {type(e)}")
+            import traceback
+            print(f"Traceback:\n{traceback.format_exc()}")
             return jsonify({
                 'people_data': [],
                 'operation_data': [],
                 'machine_data': {}
-            })  
-    
-    
-    
-
-
+            })
 
     @bp.route('/heatmap')
     def get_heatmap():
         heatmap_path = os.path.join('heatmap_outputs', f'heatmap_channel_{camera_id}.png')
         print(heatmap_path)
 
-        # First ensure the directory exists
         os.makedirs('heatmap_outputs', exist_ok=True)
 
         try:
-            #making heatmap file just for demo 
             if not os.path.exists(heatmap_path):
                 img = np.zeros((512, 512, 3), np.uint8)
                 cv2.circle(img, (256, 256), 100, (0, 255, 0), -1)
                 cv2.imwrite(heatmap_path, img)
                 print('+'*50)
 
-            # Add a small delay to ensure file is written (optional)
             import time
             time.sleep(0.1)
 

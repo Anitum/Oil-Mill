@@ -113,7 +113,7 @@
                 </div>
             </div>
         </div>
-
+        {% if camera_id not in ['201', '401'] %}
         <!-- Machine Status -->
         <div class="col-md-6 mb-4">
             <div class="card dashboard-card">
@@ -125,6 +125,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
         <!-- People Count Chart -->
         <div class="col-md-6 mb-4">
@@ -137,7 +138,7 @@
                 </div>
             </div>
         </div>
-
+        {% if camera_id not in ['201', '401'] %}
         <!-- Machine Usage Chart -->
         <div class="col-md-6 mb-4">
             <div class="card dashboard-card">
@@ -149,6 +150,7 @@
                 </div>
             </div>
         </div>
+        {% endif %}
 
         <!-- Heatmap -->
         <div class="col-md-12 mb-4">
@@ -235,7 +237,7 @@ document.addEventListener('DOMContentLoaded', function() {
             x: {
                 format: 'dd MMM yyyy HH:mm:ss' // This adds date and time format to tooltip
             },
-        
+
             y: {
                 formatter: function(val) {
                     return Math.round(val) + ' people';
