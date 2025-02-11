@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Configuration
-WATCH_DIR="/home/mridul/Oil-Mill/testing/s3_results"
-PYTHON_SCRIPT="/home/mridul/Oil-Mill/check_in_the_box.py"  # Update this path
+WATCH_DIR="/media/mayank/Ubuntu1/NewOillMill/Oil-Mill/inputs"
+PYTHON_SCRIPT="/media/mayank/Ubuntu1/NewOillMill/Oil-Mill/check_in_the_box.py"  # Update this path
 LOG_FILE="./cctv_processing.log"
 LOCK_FILE="./cctv_processing.lock"
 
