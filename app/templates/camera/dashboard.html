@@ -53,7 +53,7 @@
     .heatmap-container {
         position: relative;
         width: 100%;
-        height: 400px;
+        height: 800px;
     }
 
     .heatmap-image {
@@ -69,6 +69,10 @@
 
     .chart-container {
         height: 300px;
+    }
+
+    .hidden {
+        display: none;
     }
 </style>
 {% endblock %}
@@ -139,7 +143,7 @@
         </div>
 
         <!-- Machine Usage Chart -->
-        <div class="col-md-6 mb-4">
+        <div class="col-md-6 mb-4" id="machineUsageCard">
             <div class="card dashboard-card">
                 <div class="card-header">
                     <h5 class="mb-0">Machine Usage</h5>
@@ -206,6 +210,8 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const camera_id = '{{ camera_id }}';
+    let emptyDataCount = 0;
+    const MAX_EMPTY_DATA_ATTEMPTS = 3;
 
     // Initialize Charts
     const peopleCountChart = new ApexCharts(document.getElementById('peopleCountChart'), {
@@ -278,6 +284,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }]);
 
                 // Update machine usage if available
+                const machineUsageCard = document.getElementById('machineUsageCard');
                 if (data.machine_data && data.machine_data.usage) {
                     const usageData = data.machine_data.usage.data.map(item => {
                         const [timestamp, value] = Object.entries(item)[0];
@@ -286,10 +293,25 @@ document.addEventListener('DOMContentLoaded', function() {
                             y: value ? 100 : 0
                         };
                     });
-                    machineUsageChart.updateSeries([{
-                        name: 'Usage',
-                        data: usageData
-                    }]);
+                    
+                    if (usageData.length > 0) {
+                        machineUsageCard.classList.remove('hidden');
+                        machineUsageChart.updateSeries([{
+                            name: 'Usage',
+                            data: usageData
+                        }]);
+                        emptyDataCount = 0;
+                    } else {
+                        emptyDataCount++;
+                        if (emptyDataCount >= MAX_EMPTY_DATA_ATTEMPTS) {
+                            machineUsageCard.classList.add('hidden');
+                        }
+                    }
+                } else {
+                    emptyDataCount++;
+                    if (emptyDataCount >= MAX_EMPTY_DATA_ATTEMPTS) {
+                        machineUsageCard.classList.add('hidden');
+                    }
                 }
 
                 // Update machine status
