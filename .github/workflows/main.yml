@@ -1,76 +1,21 @@
-name: CI/CD Pipeline
+name: Continous Deployment
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
 
 jobs:
-  start-app:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Set up Python
-        uses: actions/setup-python@v3
-        with:
-          python-version: '3.x'
-          
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          
-      - name: Start application
-        run: |
-          python run.py &
-          sleep 10  # Give the app time to start
-
   deploy:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    timeout-minutes: 15  # Add overall job timeout
-    
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Create SSH directory
-      run: mkdir -p ~/.ssh/
-    
-    - name: Store SSH key
-      run: |
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-    
-    - name: Add host to known_hosts
-      run: |
-        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-    
-    - name: Prepare EC2 environment
-      timeout-minutes: 5
-      run: |
-        ssh ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} '
-          sudo yum update -y
-          sudo yum install -y python3 python3-pip python3-venv'
-    
-    - name: Transfer files
-      timeout-minutes: 3
-      run: |
-        # Exclude unnecessary files
-        rsync -azh --exclude 'venv' --exclude '.git' --exclude '__pycache__' \
-          ./* ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USERNAME }}/app/
-    
-    - name: Setup Python environment
-      timeout-minutes: 3
-      run: |
-        ssh ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} '
-          cd /home/${{ secrets.EC2_USERNAME }}/app/Oil-Mill
-          python3 -m venv venv
-          source venv/bin/activate
-          pip install --no-cache-dir -r requirements.txt'
-    
-    - name: Restart services
-      timeout-minutes: 2
-      run: |
-        ssh ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} '
-          sudo systemctl restart flask-app
-          sudo systemctl restart caddy'
+      - name: Update and restart services
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/Oil-Mill
+            git pull
+            sudo systemctl restart oil-mill
+            sudo systemctl reload caddy
