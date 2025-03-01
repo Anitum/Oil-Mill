@@ -155,7 +155,7 @@
 <!-- Camera 1 - Production Monitoring -->
 
 <li class="nav-item">
-    <a class="nav-link {% if 'staff.' in request.endpoint %}active{% endif %}" 
+    <a class="nav-link {% if request.endpoint and 'staff.' in request.endpoint %}active{% endif %}"
        href="{{ url_for('staff.list_staff') }}">
         <i class="fas fa-chalkboard-teacher"></i> Staff
     </a>

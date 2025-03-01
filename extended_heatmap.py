@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import glob
 import os
-from datetime import datetime, timedelta
 import cv2
 import logging
 
@@ -16,15 +15,6 @@ logging.basicConfig(
         logging.FileHandler('heatmap_generation.log')
     ]
 )
-
-def parse_timestamp(filename):
-    """Extract timestamp from filename format: channel{XXX}_{YYYYMMDD}T{HHMMSS}_results.csv"""
-    try:
-        timestamp_str = filename.split('_')[1]
-        return datetime.strptime(timestamp_str, '%Y%m%dT%H%M%S')
-    except Exception as e:
-        logging.error(f"Error parsing timestamp from {filename}: {e}")
-        return None
 
 def get_channel_number(filename):
     """Extract channel number from filename"""
@@ -52,22 +42,19 @@ def is_valid_csv(file_path):
         if len(df.columns) != 6:
             logging.warning(f"Invalid column count in {file_path}: expected 6, got {len(df.columns)}")
             return False
-        # Optional: Add additional validation if needed
         return True
     except Exception as e:
         logging.error(f"Error reading {file_path}: {e}")
         return False
 
-def apply_gaussian_overlay(heatmap, x, y, resolution, weight, radius=40):  # Increased radius
-    """
-    Apply Gaussian overlay with enhanced intensity
-    """
+def apply_gaussian_overlay(heatmap, x, y, resolution, radius=30):
+    """Apply Gaussian overlay with enhanced intensity"""
     try:
         x, y = int(x), int(y)
         
         # Create Gaussian kernel with higher intensity
         y_indices, x_indices = np.ogrid[-radius:radius+1, -radius:radius+1]
-        gaussian = np.exp(-(x_indices*x_indices + y_indices*y_indices) / (2 * (radius/3)**2))  # Adjusted spread
+        gaussian = np.exp(-(x_indices*x_indices + y_indices*y_indices) / (2 * (radius/3)**2))
         gaussian = gaussian * 1.5  # Increase intensity
         
         # Calculate valid ranges
@@ -90,49 +77,42 @@ def apply_gaussian_overlay(heatmap, x, y, resolution, weight, radius=40):  # Inc
         min_y = min(heatmap_slice.shape[0], gaussian_slice.shape[0])
         min_x = min(heatmap_slice.shape[1], gaussian_slice.shape[1])
         
-        # Apply overlay with increased weight
-        heatmap[y_start:y_start+min_y, x_start:x_start+min_x] += (
-            gaussian_slice[:min_y, :min_x] * (weight * 2.0)  # Doubled the weight
-        )
+        # Apply overlay
+        heatmap[y_start:y_start+min_y, x_start:x_start+min_x] += gaussian_slice[:min_y, :min_x] * 2.0
         
     except Exception as e:
         logging.error(f"Error applying Gaussian overlay at ({x}, {y}): {e}")
 
 def plot_channel_heatmaps(channel_heatmaps, save_dir=None, alpha=0.7):
-    """
-    Plot heatmaps with enhanced visibility
-    """
+    """Plot heatmaps with enhanced visibility"""
     for channel, (heatmap, background_image) in channel_heatmaps.items():
         plt.figure(figsize=(16, 9), frameon=False)
         
         # Enhance contrast of the heatmap
         if np.max(heatmap) > 0:
-            # Apply stronger normalization
-            heatmap = np.power(heatmap / np.max(heatmap), 0.7)  # Adjust gamma for better visibility
+            heatmap = np.power(heatmap / np.max(heatmap), 0.7)
         
-        # Darken the background slightly to make heatmap more visible
+        # Darken the background slightly
         darkened_bg = cv2.convertScaleAbs(background_image, alpha=0.7, beta=0)
         
         # Display darkened background
         plt.imshow(cv2.cvtColor(darkened_bg, cv2.COLOR_BGR2RGB))
         
-        # Overlay heatmap with increased alpha and different colormap
+        # Overlay heatmap
         plt.imshow(heatmap, 
-                  cmap='jet',  # Changed from 'hot' to 'jet' for better visibility
+                  cmap='jet',
                   alpha=alpha,
                   extent=[0, background_image.shape[1], background_image.shape[0], 0])
         
         if save_dir:
             save_path = os.path.join(save_dir, f'heatmap_channel_{channel}.png')
-            plt.savefig(save_path, bbox_inches='tight', pad_inches=0, dpi=300)  # Increased DPI
+            plt.savefig(save_path, bbox_inches='tight', pad_inches=0, dpi=300)
+            logging.info(f"Saved heatmap for channel {channel} to {save_path}")
             
         plt.close()
 
-
-def create_channel_heatmaps(hours_ago=None, start_time=None, end_time=None, time_decay=0.95):
-    """
-    Create heatmaps for each channel based on CSV data.
-    """
+def create_channel_heatmaps():
+    """Create heatmaps for each channel based on all CSV files in Results directory"""
     logging.info("Starting heatmap creation process")
     
     # Define all required channels
@@ -142,7 +122,7 @@ def create_channel_heatmaps(hours_ago=None, start_time=None, end_time=None, time
     channel_heatmaps = {}
     
     # Get list of CSV files
-    csv_files = glob.glob(os.path.join('Results', 'channel*_results.csv'))
+    csv_files = glob.glob(os.path.join('../processing', 'channel*_results.csv'))    
     if not csv_files:
         logging.warning("No CSV files found in Results directory")
     
@@ -155,54 +135,33 @@ def create_channel_heatmaps(hours_ago=None, start_time=None, end_time=None, time
         background = load_background_image(channel)
         if background is None:
             logging.warning(f"No background image for channel {channel} - creating default background")
-            # Create a default black background if image is missing
             background = np.zeros((720, 1280, 3), dtype=np.uint8)
             
         # Initialize heatmap with background image dimensions
-        resolution = (background.shape[1], background.shape[0])  # width, height
-        heatmap = np.zeros(resolution[::-1])  # height, width for the heatmap
+        resolution = (background.shape[1], background.shape[0])
+        heatmap = np.zeros(resolution[::-1])
         
         # Get all files for this channel
         channel_files = [f for f in csv_files if get_channel_number(os.path.basename(f)) == channel]
         
         if not channel_files:
             logging.warning(f"No CSV files found for channel {channel}")
-        
+            
         # Process each file
         for file_path in sorted(channel_files):
             if not is_valid_csv(file_path):
                 continue
                 
-            file_timestamp = parse_timestamp(os.path.basename(file_path))
-            if not file_timestamp:
-                continue
-                
-            # Check if file is within time range
-            if hours_ago is not None:
-                cutoff_time = datetime.now() - timedelta(hours=hours_ago)
-                if file_timestamp < cutoff_time:
-                    continue
-            elif start_time and end_time:
-                if not (start_time <= file_timestamp <= end_time):
-                    continue
-            
-            # Calculate time-based weight
-            if hours_ago is not None:
-                time_diff = (datetime.now() - file_timestamp).total_seconds() / 3600
-                weight = time_decay ** time_diff
-            else:
-                weight = 1.0
-            
             try:
                 # Read and process the CSV file
                 df = pd.read_csv(file_path, header=None)
                 
                 # Process detections
                 for _, row in df.iterrows():
-                    x1, y1, x2, y2 = row[0:4]
+                    x1, y1, x2, y2 = row[2:6]  # Adjusted indices based on CSV format
                     center_x = (x1 + x2) / 2
-                    center_y = (y1 + y2) / 2
-                    apply_gaussian_overlay(heatmap, center_x, center_y, resolution, weight)
+                    center_y = (y1 )
+                    apply_gaussian_overlay(heatmap, center_x, center_y, resolution)
                     
             except Exception as e:
                 logging.error(f"Error processing file {file_path}: {e}")
@@ -222,10 +181,7 @@ if __name__ == "__main__":
     os.makedirs(output_dir, exist_ok=True)
     
     # Create heatmaps for all channels
-    channel_heatmaps = create_channel_heatmaps(
-        hours_ago=100,
-        time_decay=0.95
-    )
+    channel_heatmaps = create_channel_heatmaps()
     
     # Plot and save the heatmaps
     plot_channel_heatmaps(channel_heatmaps, save_dir=output_dir, alpha=0.6)

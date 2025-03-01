@@ -90,18 +90,126 @@
         grid-template-columns: 1fr;
     }
 }
+
+.machine-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.machine-card h4 {
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+}
+
+.machine-card h4 i {
+    margin-right: 0.5rem;
+    color: #28a745;
+}
+
+.machine-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.5rem;
+}
+
+.machine-time {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.machine-status {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.machine-status.active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.machine-status.inactive {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.machine-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 992px) {
+    .machine-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .machine-cards {
+        grid-template-columns: 1fr;
+    }
+}
 </style>
 {% endblock %}
 
 {% block content %}
 <!--Heading-->
 <div class="container-fluid py-3">
-    <h1 class="text-center">Oil Mill Dashboard</h1>
+    <h1 class="text-center"> Dashboard</h1>
+    <p class="text-center text-muted" id="lastUpdated">Last updated: </p>
 </div>
-<div class="container-fluid py-3">
+<!-- <div class="container-fluid py-3"> -->
     <!-- Camera Controls - Small circles at top -->
-    <div class="camera-controls">
+    <!-- <div class="camera-controls"> -->
         <!-- Will be populated by JavaScript -->
+    <!-- </div> -->
+
+    <!-- Machine Status Cards -->
+    <div class="machine-cards">
+        <!-- Filter Machine -->
+        <div class="machine-card">
+            <h4><i class="fas fa-filter"></i> Filter System</h4>
+            <div class="progress mb-2" style="height: 5px;">
+                <div class="progress-bar bg-success" id="filter-progress" role="progressbar" style="width: 0%"></div>
+            </div>
+            <div class="machine-info">
+                <div class="machine-time" id="filter-time">0 min</div>
+                <div class="machine-status" id="filter-status">Inactive</div>
+            </div>
+        </div>
+        
+        <!-- Crusher Machine -->
+        <div class="machine-card">
+            <h4><i class="fas fa-cogs"></i> Crusher System</h4>
+            <div class="progress mb-2" style="height: 5px;">
+                <div class="progress-bar bg-success" id="crusher-progress" role="progressbar" style="width: 0%"></div>
+            </div>
+            <div class="machine-info">
+                <div class="machine-time" id="crusher-time">0 min</div>
+                <div class="machine-status" id="crusher-status">Inactive</div>
+            </div>
+        </div>
+        
+        <!-- Filling Machine -->
+        <div class="machine-card">
+            <h4><i class="fas fa-fill-drip"></i> Filling System</h4>
+            <div class="progress mb-2" style="height: 5px;">
+                <div class="progress-bar bg-success" id="filling-progress" role="progressbar" style="width: 0%"></div>
+            </div>
+            <div class="machine-info">
+                <div class="machine-time" id="filling-time">0 min</div>
+                <div class="machine-status" id="filling-status">Inactive</div>
+            </div>
+        </div>
     </div>
 
     <!-- Charts Grid -->
@@ -131,6 +239,17 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 let peopleChart, machineChart, activityChart;
+const MAX_MACHINE_MINUTES = 480; // 8 hours as a reasonable maximum
+
+// Format minutes as hours and minutes
+function formatMinutes(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.round(minutes % 60);
+    if (hours > 0) {
+        return `${hours}h ${mins}m`;
+    }
+    return `${mins} min`;
+}
 
 // Create camera button
 function createCameraButton(camera) {
@@ -160,96 +279,187 @@ async function toggleCamera(cameraId) {
     }
 }
 
+// Update machine status cards
+function updateMachineCards(machineData) {
+    const lastDataPoint = machineData.data[machineData.data.length - 1];
+    const areas = lastDataPoint.by_area;
+    
+    // Calculate total minutes used today
+    const totalMinutes = {
+        filter: 0,
+        crusher: 0,
+        filling: 0
+    };
+    
+    // Sum up usage across all hours for today
+    const today = new Date().toISOString().split('T')[0];
+    machineData.data.forEach(dataPoint => {
+        if (dataPoint.timestamp.startsWith(today)) {
+            Object.entries(dataPoint.by_area).forEach(([area, minutes]) => {
+                if (area in totalMinutes) {
+                    totalMinutes[area] += minutes;
+                }
+            });
+        }
+    });
+    
+    // Update each machine card
+    Object.entries(totalMinutes).forEach(([machine, minutes]) => {
+        const progressBar = document.getElementById(`${machine}-progress`);
+        const timeElement = document.getElementById(`${machine}-time`);
+        const statusElement = document.getElementById(`${machine}-status`);
+        
+        if (progressBar && timeElement && statusElement) {
+            // Update progress bar (capped at MAX_MACHINE_MINUTES)
+            const percentage = Math.min((minutes / MAX_MACHINE_MINUTES) * 100, 100);
+            progressBar.style.width = `${percentage}%`;
+            
+            // Update time display
+            timeElement.textContent = formatMinutes(minutes);
+            
+            // Update status
+            const isActive = areas[machine] > 0;
+            statusElement.textContent = isActive ? 'Active' : 'Inactive';
+            statusElement.className = isActive ? 'machine-status active' : 'machine-status inactive';
+        }
+    });
+    
+    // Update last updated time
+    document.getElementById('lastUpdated').textContent = `Last updated: ${new Date(machineData.last_updated).toLocaleString()}`;
+}
+
+// Initialize people count chart
+// Initialize people count chart
 // Initialize people count chart
 async function initPeopleChart() {
-    const response = await fetch('/api/people-count');
-    const data = await response.json();
-    
-    const ctx = document.getElementById('peopleChart').getContext('2d');
-    peopleChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: data.data.map(d => new Date(d.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})),
-            datasets: [{
-                label: 'Total People',
-                data: data.data.map(d => d.total_count),
-                borderColor: '#007bff',
-                tension: 0.1,
-                fill: true,
-                backgroundColor: 'rgba(0,123,255,0.1)'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
+    try {
+        const response = await fetch('/api/people-count');
+        const data = await response.json();
+        
+        // Log the received data to check its structure
+        console.log('People count data:', data);
+
+        // Ensure we have data and it's in the expected format
+        if (!data || !Array.isArray(data.data)) {
+            console.error('Invalid people count data format');
+            return;
+        }
+
+        // Process the data into the correct format for the chart
+        const chartData = data.data.map(item => ({
+            timestamp: new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+            count: parseInt(item.count) || 0
+        }));
+
+        const ctx = document.getElementById('peopleChart').getContext('2d');
+        peopleChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartData.map(d => d.timestamp),
+                datasets: [{
+                    label: 'Total People',
+                    data: chartData.map(d => d.count),
+                    borderColor: '#007bff',
+                    tension: 0.1,
+                    fill: true,
+                    backgroundColor: 'rgba(0,123,255,0.1)'
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        display: false
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
                     }
                 },
-                x: {
-                    grid: {
-                        display: false
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            display: true
+                        },
+                        ticks: {
+                            stepSize: 1
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
                     }
                 }
             }
-        }
-    });
+        });
+    } catch (error) {
+        console.error('Error initializing people chart:', error);
+    }
 }
-
 // Initialize machine usage chart
-
 async function initMachineChart() {
     const response = await fetch('/api/machine-usage');
     const data = await response.json();
     
-    const areas = Object.keys(data.data[0].by_area);
-    const latestUsage = areas.map(area => ({
-        name: area,
-        usage: data.data[data.data.length - 1].by_area[area]
-    }));
-
+    // Update machine cards
+    updateMachineCards(data);
+    
+    // Filter data for today only
+    const today = new Date().toISOString().split('T')[0];
+    const todayData = data.data.filter(item => item.timestamp.startsWith(today));
+    
+    // Prepare chart data
+    const labels = todayData.map(d => {
+        const time = new Date(d.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        return time;
+    });
+    
     const ctx = document.getElementById('machineChart').getContext('2d');
     machineChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: latestUsage.map(m => m.name),
-            datasets: [{
-                data: latestUsage.map(m => m.usage),
-                backgroundColor: '#28a745'
-            }]
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Filter',
+                    data: todayData.map(d => d.by_area.filter),
+                    backgroundColor: '#3498db'
+                },
+                {
+                    label: 'Crusher',
+                    data: todayData.map(d => d.by_area.crusher),
+                    backgroundColor: '#e67e22'
+                },
+                {
+                    label: 'Filling',
+                    data: todayData.map(d => d.by_area.filling),
+                    backgroundColor: '#2ecc71'
+                }
+            ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
             scales: {
-                y: {
-                    beginAtZero: true,
+                x: {
+                    stacked: true,
                     grid: {
                         display: false
                     }
                 },
-                x: {
-                    grid: {
-                        display: false
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Minutes Used'
                     }
                 }
             }
         }
     });
 }
+
 // Initialize activity chart
 async function initActivityChart() {
     const response = await fetch('/api/activity-data');
@@ -307,14 +517,39 @@ async function initCameraButtons() {
         .join('');
 }
 
-// Initialize dashboard
-async function initDashboard() {
-    await Promise.all([
-        initCameraButtons(),
-        initPeopleChart(),
-        initMachineChart(),
-        initActivityChart()
-    ]);
+// Check if it's a new day and reset if needed
+function checkForDayReset() {
+    const currentDate = new Date().toDateString();
+    const lastDate = localStorage.getItem('lastProcessingDate');
+    
+    if (lastDate !== currentDate) {
+        console.log('New day detected, resetting chart data');
+        localStorage.setItem('lastProcessingDate', currentDate);
+        
+        // The server-side processor will handle the actual reset,
+        // but we can force a refresh here
+        fetch('/api/machine-usage')
+            .then(response => response.json())
+            .then(data => {
+                updateMachineCards(data);
+                if (machineChart) {
+                    // Filter data for today only
+                    const today = new Date().toISOString().split('T')[0];
+                    const todayData = data.data.filter(item => item.timestamp.startsWith(today));
+                    
+                    machineChart.data.labels = todayData.map(d => {
+                        const time = new Date(d.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        return time;
+                    });
+                    
+                    machineChart.data.datasets[0].data = todayData.map(d => d.by_area.filter);
+                    machineChart.data.datasets[1].data = todayData.map(d => d.by_area.crusher);
+                    machineChart.data.datasets[2].data = todayData.map(d => d.by_area.filling);
+                    
+                    machineChart.update();
+                }
+            });
+    }
 }
 
 // Update data every 30 seconds
@@ -327,7 +562,10 @@ function startDataRefresh() {
                 fetch('/api/activity-data').then(r => r.json())
             ]);
 
-            // Update charts with new data
+            // Update machine cards
+            updateMachineCards(machineData);
+
+            // Update people count chart
             if (peopleChart && peopleData.data) {
                 peopleChart.data.labels = peopleData.data.map(d => 
                     new Date(d.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
@@ -336,7 +574,36 @@ function startDataRefresh() {
                 peopleChart.update('none');
             }
 
-            // Similar updates for other charts...
+            // Update machine usage chart
+            if (machineChart && machineData.data) {
+                // Filter data for today only
+                const today = new Date().toISOString().split('T')[0];
+                const todayData = machineData.data.filter(item => item.timestamp.startsWith(today));
+                
+                machineChart.data.labels = todayData.map(d => {
+                    const time = new Date(d.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    return time;
+                });
+                
+                machineChart.data.datasets[0].data = todayData.map(d => d.by_area.filter);
+                machineChart.data.datasets[1].data = todayData.map(d => d.by_area.crusher);
+                machineChart.data.datasets[2].data = todayData.map(d => d.by_area.filling);
+                
+                machineChart.update('none');
+            }
+            
+            // Update activity chart
+            if (activityChart && activityData.activities) {
+                const activities = Object.values(activityData.activities);
+                const latestActivity = activities.map(a => ({
+                    name: a.name.replace(' Machine ', ' M'),
+                    count: a.data[a.data.length - 1].count
+                }));
+                
+                activityChart.data.labels = latestActivity.map(a => a.name);
+                activityChart.data.datasets[0].data = latestActivity.map(a => a.count);
+                activityChart.update('none');
+            }
             
         } catch (error) {
             console.error('Error updating dashboard:', error);
@@ -344,11 +611,29 @@ function startDataRefresh() {
     }, 30000);
 }
 
+// Initialize dashboard
+async function initDashboard() {
+    // Initialize localStorage date if not set
+    if (!localStorage.getItem('lastProcessingDate')) {
+        localStorage.setItem('lastProcessingDate', new Date().toDateString());
+    }
+    
+    await Promise.all([
+        initCameraButtons(),
+        initPeopleChart(),
+        initMachineChart(),
+        initActivityChart()
+    ]);
+    
+    startDataRefresh();
+    
+    // Check for day reset every hour
+    setInterval(checkForDayReset, 3600000); // 1 hour
+}
+
 // Start dashboard
 document.addEventListener('DOMContentLoaded', () => {
-    initDashboard().then(() => {
-        startDataRefresh();
-    });
+    initDashboard();
 });
 </script>
 {% endblock %}
