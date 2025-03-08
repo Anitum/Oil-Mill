@@ -8,7 +8,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Update and restart services
+      - name: Update, install dependencies and restart services
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -17,5 +17,11 @@ jobs:
           script: |
             cd /home/ubuntu/Oil-Mill
             git pull
+            # Create virtual environment "venv" if it doesn't exist
+            if [ ! -d "venv" ]; then
+              python3 -m venv venv
+            fi
+            source venv/bin/activate
+            pip3 install -r requirements.txt
             sudo systemctl restart oil-mill
             sudo systemctl reload caddy
