@@ -1,41 +1,74 @@
 {% extends "base.html" %}
 {% block title %}Attendance History - {{ staff.full_name }}{% endblock %}
 
+{% block extra_css %}
+<style>
+.attendance-day {
+    aspect-ratio: 1;
+    min-height: 70px;
+    transition: all 0.2s ease;
+}
+.attendance-day:hover {
+    background-color: rgba(0,0,0,0.03);
+    transform: scale(1.02);
+}
+@media (max-width: 768px) {
+    .attendance-day {
+        min-height: 50px;
+    }
+    .btn-responsive-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        width: 100%;
+    }
+    .btn-responsive-group .btn {
+        margin: 0 !important;
+    }
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid px-lg-4 py-3">
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-            <h1 class="mb-0">Attendance History</h1>
+            <h1 class="h2 mb-0 fw-bold">Attendance History</h1>
             <p class="text-muted">
                 {{ staff.full_name }} | {{ staff.staff_type }} |
                 ID: {{ staff.id }}
             </p>
         </div>
-        <div class="btn-group">
-            <button type="button" class="btn btn-success" onclick="exportHistory()">
+        <div class="btn-responsive-group">
+            <button type="button" class="btn btn-success shadow-sm" onclick="exportHistory()">
                 <i class="fas fa-download me-2"></i>Export
             </button>
-            <a href="{{ url_for('attendance.staff_attendance') }}" class="btn btn-secondary">
-                Back to Staff List
+            <a href="{{ url_for('attendance.staff_attendance') }}" class="btn btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left me-2"></i>Back to Staff List
             </a>
         </div>
     </div>
 
     <!-- Stats Card Row -->
-    <div class="row mb-4">
+    <div class="row g-3 mb-4">
         <!-- Monthly Attendance Card -->
-        <div class="col-md-3">
-            <div class="card bg-primary bg-opacity-10 h-100">
+        <div class="col-md-6 col-lg-3">
+            <div class="card bg-primary bg-opacity-10 h-100 border-0 shadow-sm">
                 <div class="card-body">
-                    <h6 class="text-primary card-subtitle mb-2">Monthly Attendance</h6>
+                    <h6 class="text-primary card-subtitle mb-2 fw-bold">Monthly Attendance</h6>
                     {% set present_days = attendance_records|selectattr('status', 'eq', 'PRESENT')|list|length %}
                     {% set total_days = attendance_records|length %}
                     {% set percentage = (present_days / total_days * 100)|round|int if total_days > 0 else 0 %}
-                    <h3 class="card-title mb-0">{{ percentage }}%</h3>
+                    <h3 class="card-title mb-0 fw-bold">{{ percentage }}%</h3>
                     <div class="mt-2">
-                        <div class="progress" style="height: 4px;">
-                            <div class="progress-bar bg-primary" style="width: {{ percentage }}%"></div>
+                        <div class="progress rounded-pill" style="height: 6px;">
+                            <div class="progress-bar bg-primary rounded-pill" 
+                                 role="progressbar"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100"
+                                 aria-valuenow="{{ percentage }}"
+                                 style="width: {{ percentage }}%"></div>
                         </div>
                         <small class="text-muted">{{ present_days }}/{{ total_days }} days present</small>
                     </div>
@@ -44,12 +77,12 @@
         </div>
 
         <!-- Late Arrivals Card -->
-        <div class="col-md-3">
-            <div class="card bg-warning bg-opacity-10 h-100">
+        <div class="col-md-6 col-lg-3">
+            <div class="card bg-warning bg-opacity-10 h-100 border-0 shadow-sm">
                 <div class="card-body">
-                    <h6 class="text-warning card-subtitle mb-2">Late Arrivals</h6>
+                    <h6 class="text-warning card-subtitle mb-2 fw-bold">Late Arrivals</h6>
                     {% set late_count = attendance_records|selectattr('arrival_time')|selectattr('arrival_time', 'gt', 'expected_arrival_time')|list|length %}
-                    <h3 class="card-title mb-0">{{ late_count }}</h3>
+                    <h3 class="card-title mb-0 fw-bold">{{ late_count }}</h3>
                     <div class="mt-2">
                         <small class="text-muted">
                             {{ (late_count / total_days * 100)|round|int if total_days > 0 else 0 }}% of total days
@@ -60,12 +93,12 @@
         </div>
 
         <!-- Leave Days Card -->
-        <div class="col-md-3">
-            <div class="card bg-info bg-opacity-10 h-100">
+        <div class="col-md-6 col-lg-3">
+            <div class="card bg-info bg-opacity-10 h-100 border-0 shadow-sm">
                 <div class="card-body">
-                    <h6 class="text-info card-subtitle mb-2">Leave Days</h6>
+                    <h6 class="text-info card-subtitle mb-2 fw-bold">Leave Days</h6>
                     {% set leave_count = attendance_records|selectattr('status', 'eq', 'LEAVE')|list|length %}
-                    <h3 class="card-title mb-0">{{ leave_count }}</h3>
+                    <h3 class="card-title mb-0 fw-bold">{{ leave_count }}</h3>
                     <div class="mt-2">
                         <small class="text-muted">
                             {{ (leave_count / total_days * 100)|round|int if total_days > 0 else 0 }}% of total days
@@ -76,11 +109,11 @@
         </div>
 
         <!-- Average Arrival Time Card -->
-        <div class="col-md-3">
-            <div class="card bg-success bg-opacity-10 h-100">
+        <div class="col-md-6 col-lg-3">
+            <div class="card bg-success bg-opacity-10 h-100 border-0 shadow-sm">
                 <div class="card-body">
-                    <h6 class="text-success card-subtitle mb-2">Avg. Arrival Time</h6>
-                    <h3 class="card-title mb-0">{{ avg_arrival_time }}</h3>
+                    <h6 class="text-success card-subtitle mb-2 fw-bold">Avg. Arrival Time</h6>
+                    <h3 class="card-title mb-0 fw-bold">{{ avg_arrival_time }}</h3>
                     <div class="mt-2">
                         <small class="text-muted">Expected: 09:00</small>
                     </div>
@@ -90,12 +123,12 @@
     </div>
 
     <!-- Main Content -->
-    <div class="row">
+    <div class="row g-3">
         <!-- Calendar View -->
-        <div class="col-md-8 mb-4">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Monthly Calendar</h5>
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <h5 class="card-title mb-0 fw-bold">Monthly Calendar</h5>
                     <div class="btn-group">
                         <button type="button" class="btn btn-sm btn-outline-secondary" onclick="previousMonth()">
                             <i class="fas fa-chevron-left"></i>
@@ -112,25 +145,25 @@
                     <div class="attendance-calendar">
                         <div class="row text-center mb-2">
                             {% for day in ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] %}
-                            <div class="col"><small class="text-muted">{{ day }}</small></div>
+                            <div class="col"><small class="text-muted fw-bold">{{ day }}</small></div>
                             {% endfor %}
                         </div>
                         {% for week in calendar_weeks %}
-                        <div class="row g-1">
+                        <div class="row g-2">
                             {% for day in week %}
                             <div class="col">
-                                <div class="attendance-day p-2 border rounded {% if day.date == today %}bg-light{% endif %}">
-                                    <small class="text-muted d-block">{{ day.date.day }}</small>
+                                <div class="attendance-day p-2 border rounded {% if day.date == today %}bg-light border-primary{% endif %}">
+                                    <small class="text-muted d-block fw-bold">{{ day.date.day }}</small>
                                     {% if day.attendance %}
                                     <div class="mt-1">
-                                        <span class="badge {% if day.attendance.status == 'PRESENT' %}bg-success
+                                        <span class="badge rounded-pill {% if day.attendance.status == 'PRESENT' %}bg-success
                                                          {% elif day.attendance.status == 'ABSENT' %}bg-danger
                                                          {% elif day.attendance.status == 'LEAVE' %}bg-info
-                                                         {% else %}bg-warning{% endif %}">
+                                                         {% else %}bg-warning{% endif %} px-2">
                                             {{ day.attendance.status[0] }}
                                         </span>
                                         {% if day.attendance.arrival_time %}
-                                        <small class="d-block text-muted">
+                                        <small class="d-block text-muted mt-1">
                                             {{ day.attendance.arrival_time.strftime('%H:%M') }}
                                         </small>
                                         {% endif %}
@@ -147,31 +180,32 @@
         </div>
 
         <!-- Attendance List -->
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Daily Records</h5>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 fw-bold">Daily Records</h5>
+                    <span class="badge bg-primary rounded-pill px-3">{{ attendance_records|length }} Records</span>
                 </div>
                 <div class="card-body p-0">
                     <div class="list-group list-group-flush">
                         {% for record in attendance_records %}
-                        <div class="list-group-item">
+                        <div class="list-group-item list-group-item-action border-0 py-3 px-3">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="mb-1">{{ record.date.strftime('%d %b, %Y') }}</h6>
+                                    <h6 class="mb-1 fw-bold">{{ record.date.strftime('%d %b, %Y') }}</h6>
                                     {% if record.arrival_time %}
                                     <small class="text-muted">
                                         Arrived: {{ record.arrival_time.strftime('%H:%M') }}
                                         {% if record.arrival_time > record.expected_arrival_time %}
-                                        <span class="text-warning">(Late)</span>
+                                        <span class="text-warning fw-bold">(Late)</span>
                                         {% endif %}
                                     </small>
                                     {% endif %}
                                 </div>
-                                <span class="badge {% if record.status == 'PRESENT' %}bg-success
+                                <span class="badge rounded-pill {% if record.status == 'PRESENT' %}bg-success
                                                {% elif record.status == 'ABSENT' %}bg-danger
                                                {% elif record.status == 'LEAVE' %}bg-info
-                                               {% else %}bg-warning{% endif %}">
+                                               {% else %}bg-warning{% endif %} px-3 py-2">
                                     {{ record.status }}
                                 </span>
                             </div>
@@ -180,7 +214,7 @@
                             {% endif %}
                         </div>
                         {% else %}
-                        <div class="list-group-item text-center py-4">
+                        <div class="list-group-item text-center py-5">
                             <p class="text-muted mb-0">No attendance records found</p>
                         </div>
                         {% endfor %}
@@ -195,8 +229,18 @@
 {% block extra_js %}
 <script>
 function exportHistory() {
-    // Add export functionality
-    window.location.href = "{{ url_for('attendance.export_staff_history', staff_id=staff.id) }}";
+    // Add export functionality with loading state
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Exporting...';
+    btn.disabled = true;
+    
+    // Simulate processing
+    setTimeout(() => {
+        window.location.href = "{{ url_for('attendance.export_staff_history', staff_id=staff.id) }}";
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }, 800);
 }
 
 function previousMonth() {

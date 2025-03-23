@@ -4,21 +4,107 @@
 
 {% block extra_css %}
 <style>
-    /* (Keep your existing CSS definitions unchanged) */
-    .dashboard-card { border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); transition: all 0.3s ease; }
-    .dashboard-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-    .video-player-container { position: relative; width: 100%; height: 400px; background-color: #000; border-radius: 8px; overflow: hidden; }
-    #videoElement { width: 100%; height: 100%; object-fit: cover; }
-    .stream-status { position: absolute; top: 10px; right: 10px; color: white; background: rgba(0,0,0,0.7); padding: 5px 10px; border-radius: 4px; font-size: 0.9rem; }
-    .machine-status { padding: 15px; border-radius: 8px; margin-bottom: 10px; background: #f8f9fa; border-left: 4px solid #007bff; }
-    .machine-status.active { border-left-color: #28a745; }
-    .machine-status.warning { border-left-color: #ffc107; }
-    .machine-status.danger { border-left-color: #dc3545; }
-    .heatmap-container { position: relative; width: 100%; height: 800px; }
-    .heatmap-image { width: 100%; height: 100%; object-fit: cover; }
-    .status-badge { font-size: 0.9rem; padding: 0.5rem 1rem; }
-    .chart-container { height: 300px; }
-    .hidden { display: none; }
+    .dashboard-card {
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .video-container {
+        position: relative;
+        width: 100%;
+        height: 400px;
+        background-color: #000;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .video-feed {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .stream-error {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        text-align: center;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 20px;
+        border-radius: 8px;
+        display: none;
+    }
+
+    .stream-error.visible {
+        display: block;
+    }
+
+    .reconnect-button {
+        margin-top: 10px;
+        padding: 8px 16px;
+        background: #007bff;
+        border: none;
+        border-radius: 4px;
+        color: white;
+        cursor: pointer;
+    }
+
+    .reconnect-button:hover {
+        background: #0056b3;
+    }
+
+    .machine-status {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        background: #f8f9fa;
+        border-left: 4px solid #007bff;
+    }
+
+    .machine-status.active {
+        border-left-color: #28a745;
+    }
+
+    .machine-status.warning {
+        border-left-color: #ffc107;
+    }
+
+    .machine-status.danger {
+        border-left-color: #dc3545;
+    }
+
+    .heatmap-container {
+        position: relative;
+        width: 100%;
+        height: 800px;
+    }
+
+    .heatmap-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .status-badge {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+    }
+
+    .chart-container {
+        height: 300px;
+    }
+
+    .hidden {
+        display: none;
+    }
 </style>
 {% endblock %}
 
@@ -30,7 +116,7 @@
             <div class="card dashboard-card">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
-                        <h2 class="mb-0">{{ machine_name }}</h2>
+                        <!-- <h2 class="mb-0">{{ machine_name }}</h2> -->
                         <p class="text-muted mb-0">Camera ID: {{ camera_id }}</p>
                     </div>
                     <div class="d-flex align-items-center">
@@ -56,9 +142,12 @@
                     <h5 class="mb-0">Live Feed</h5>
                 </div>
                 <div class="card-body">
-                    <div class="video-player-container">
-                        <video id="videoElement" controls></video>
-                        <div class="stream-status" id="streamStatus">Connecting...</div>
+                    <div class="video-container">
+                        <video id="videoFeed" class="video-feed" autoplay playsinline></video>
+                        <div class="stream-error" id="streamError">
+                            <p>Stream connection lost</p>
+                            <button class="reconnect-button" id="reconnectBtn">Reconnect</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -108,7 +197,7 @@
                 </div>
                 <div class="card-body">
                     <div class="heatmap-container">
-                        <img src="/camera{{ camera_id }}/heatmap" class="heatmap-image">
+                        <!-- Heatmap will be loaded via JavaScript -->
                     </div>
                 </div>
             </div>
@@ -152,172 +241,365 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const camera_id = '{{ camera_id }}';
-    const videoElement = document.getElementById('videoElement');
-    const statusElement = document.getElementById('streamStatus');
-    const videoSrc = `http://13.232.74.227/hls/camera${camera_id}/camera${camera_id}.m3u8`;
+    let emptyDataCount = 0;
+    const MAX_EMPTY_DATA_ATTEMPTS = 3;
+    let hls = null;
+    let reconnectAttempts = 0;
+    const MAX_RECONNECT_ATTEMPTS = 5;
+    const RECONNECT_DELAY = 5000; // 5 seconds
 
-    let retryCount = 0;
-    const maxRetries = 5;
+    // Video Stream Setup
+    const video = document.getElementById('videoFeed');
+    const streamError = document.getElementById('streamError');
+    const reconnectBtn = document.getElementById('reconnectBtn');
 
-    function updateStreamStatus(message, isError = false) {
-        statusElement.textContent = message;
-        statusElement.style.color = isError ? '#ff4444' : '#ffffff';
-    }
-
-    function initializeHls() {
-        let hls;
+    function initializeHLS() {
         if (Hls.isSupported()) {
             hls = new Hls({
-                liveDurationInfinity: true,
+                debug: false,
+                enableWorker: true,
+                lowLatencyMode: true,
+                backBufferLength: 90,
+                maxBufferLength: 30,
+                maxMaxBufferLength: 600,
+                maxBufferSize: 60 * 1000 * 1000,
+                maxBufferHole: 0.5,
+                highBufferWatchdogPeriod: 2,
+                nudgeOffset: 0.1,
+                nudgeMaxRetry: 10,
+                maxFragLookUpTolerance: 0.25,
                 liveSyncDurationCount: 3,
-                xhrSetup: function(xhr) {
-                    xhr.withCredentials = false;
+                liveMaxLatencyDurationCount: 10,
+                liveDurationInfinity: true,
+                fragLoadingTimeOut: 20000,
+                manifestLoadingTimeOut: 10000,
+                levelLoadingTimeOut: 10000,
+                fragLoadingMaxRetry: 6,
+                manifestLoadingMaxRetry: 6,
+                levelLoadingMaxRetry: 4,
+                startFragPrefetch: true,
+                testBandwidth: true,
+                progressive: true,
+                lowLatencyMode: true,
+                abrEwmaDefaultEstimate: 500000,
+                abrBandWidthFactor: 95,
+                abrBandWidthUpFactor: 90,
+                abrMaxWithRealBitrate: true,
+                maxStarvationDelay: 4,
+                maxLoadingDelay: 4,
+                manifestLoadPolicy: {
+                    default: {
+                        maxTimeToFirstByteMs: 10000,
+                        maxLoadTimeMs: 20000,
+                        timeoutRetry: {
+                            maxNumRetry: 6,
+                            retryDelayMs: 1000,
+                            maxRetryDelayMs: 8000
+                        },
+                        errorRetry: {
+                            maxNumRetry: 6,
+                            retryDelayMs: 1000,
+                            maxRetryDelayMs: 8000
+                        }
+                    }
+                },
+                playlistLoadPolicy: {
+                    default: {
+                        maxTimeToFirstByteMs: 10000,
+                        maxLoadTimeMs: 20000,
+                        timeoutRetry: {
+                            maxNumRetry: 6,
+                            retryDelayMs: 1000,
+                            maxRetryDelayMs: 8000
+                        },
+                        errorRetry: {
+                            maxNumRetry: 6,
+                            retryDelayMs: 1000,
+                            maxRetryDelayMs: 8000
+                        }
+                    }
+                },
+                fragLoadPolicy: {
+                    default: {
+                        maxTimeToFirstByteMs: 10000,
+                        maxLoadTimeMs: 20000,
+                        timeoutRetry: {
+                            maxNumRetry: 6,
+                            retryDelayMs: 1000,
+                            maxRetryDelayMs: 8000
+                        },
+                        errorRetry: {
+                            maxNumRetry: 6,
+                            retryDelayMs: 1000,
+                            maxRetryDelayMs: 8000
+                        }
+                    }
                 }
             });
 
+            const videoSrc = `http://15.207.6.241/hls/camera${camera_id}/camera${camera_id}.m3u8`;
+            
             hls.loadSource(videoSrc);
-            hls.attachMedia(videoElement);
+            hls.attachMedia(video);
 
             hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                updateStreamStatus('Live');
-                retryCount = 0; // reset on success
-                videoElement.play().catch(error => {
-                    updateStreamStatus('Click to start playback', true);
+                video.play().catch(function(error) {
+                    console.log("Play failed:", error);
+                    video.play();
                 });
+                streamError.classList.remove('visible');
+                reconnectAttempts = 0;
             });
 
             hls.on(Hls.Events.ERROR, function(event, data) {
                 if (data.fatal) {
-                    switch(data.type) {
+                    switch (data.type) {
                         case Hls.ErrorTypes.NETWORK_ERROR:
-                            updateStreamStatus('Network error. Reconnecting...', true);
-                            retryCount++;
-                            if (retryCount < maxRetries) {
-                                setTimeout(() => hls.startLoad(), 5000);
-                            } else {
-                                updateStreamStatus('Max retries reached. Refresh the page.', true);
-                            }
+                            console.log("Network error, trying to recover...");
+                            hls.startLoad();
                             break;
                         case Hls.ErrorTypes.MEDIA_ERROR:
-                            updateStreamStatus('Media error. Recovering...', true);
+                            console.log("Media error, trying to recover...");
                             hls.recoverMediaError();
                             break;
                         default:
-                            updateStreamStatus('Fatal error. Restarting stream...', true);
-                            hls.destroy();
-                            setTimeout(() => { initializeHls(); }, 5000);
+                            console.log("Fatal error, destroying HLS instance");
+                            destroyHLS();
                             break;
                     }
                 }
             });
-        } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
-            videoElement.src = videoSrc;
-            videoElement.addEventListener('loadedmetadata', function() {
-                updateStreamStatus('Live');
-                videoElement.play();
-            });
-            videoElement.addEventListener('error', function(e) {
-                updateStreamStatus('Stream Error', true);
-            });
-        } else {
-            updateStreamStatus('Browser not supported', true);
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            // For Safari, which has native HLS support
+            video.src = `http://13.232.74.227/hls/camera${camera_id}/camera${camera_id}.m3u8`;
         }
-        return hls;
     }
 
-    // Listen for stalled events on the video element and try to reinitialize if needed.
-    videoElement.addEventListener('stalled', function() {
-        updateStreamStatus('Stream stalled, attempting recovery...', true);
-        if (Hls.isSupported()) {
-            if (window.hlsInstance) {
-                window.hlsInstance.destroy();
-            }
-            setTimeout(() => {
-                window.hlsInstance = initializeHls();
-            }, 5000);
+    function destroyHLS() {
+        if (hls) {
+            hls.destroy();
+            hls = null;
         }
-    });
+    }
 
-    // Initialize the HLS stream and save the instance globally (for recovery)
-    window.hlsInstance = initializeHls();
+    function reconnectStream() {
+        if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+            reconnectAttempts++;
+            streamError.querySelector('p').textContent = `Reconnecting... Attempt ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`;
+            destroyHLS();
+            initializeHLS();
+        } else {
+            streamError.querySelector('p').textContent = 'Maximum reconnection attempts reached. Please refresh the page.';
+            reconnectBtn.style.display = 'none';
+        }
+    }
 
-    // Initialize charts using ApexCharts (unchanged)
+    reconnectBtn.addEventListener('click', reconnectStream);
+
+    // Initialize HLS stream
+    initializeHLS();
+
+    // Initialize Charts
     const peopleCountChart = new ApexCharts(document.getElementById('peopleCountChart'), {
-        chart: { type: 'line', height: 300 },
-        series: [{ name: 'People Count', data: [] }],
-        xaxis: { type: 'datetime' },
-        yaxis: { min: 0 }
+        chart: {
+            type: 'line',
+            height: 300,
+            animations: {
+                enabled: true
+            }
+        },
+        series: [{
+            name: 'People Count',
+            data: []
+        }],
+        xaxis: {
+            type: 'datetime'
+        },
+        yaxis: {
+            min: 0,
+            labels: {
+                formatter: function(val) {
+                    return Math.round(val);
+                }
+            }
+        }
     });
     peopleCountChart.render();
 
     const machineUsageChart = new ApexCharts(document.getElementById('machineUsageChart'), {
-        chart: { type: 'bar', height: 300 },
-        series: [{ name: 'Usage', data: [] }],
-        xaxis: { type: 'category' },
-        yaxis: { min: 0, max: 100 },
-        dataLabels: { enabled: true },
+        chart: {
+            type: 'bar',
+            height: 300,
+            animations: {
+                enabled: true
+            }
+        },
+        series: [{
+            name: 'Usage',
+            data: []
+        }],
+        xaxis: {
+            type: 'category',
+            labels: {
+                formatter: function(val) {
+                    return val;
+                }
+            }
+        },
+        yaxis: {
+            min: 0,
+            max: 100,
+            labels: {
+                formatter: function(val) {
+                    return val.toFixed(0) + '%';
+                }
+            }
+        },
+        dataLabels: {
+            enabled: true,
+            formatter: function(val, opt) {
+                return val ? val.toFixed(0) : '0';
+            },
+            style: {
+                fontSize: '12px',
+                colors: ['#ffffff']
+            }
+        },
+        plotOptions: {
+            bar: {
+                borderRadius: 4,
+                columnWidth: '50%',
+            }
+        },
         colors: ['#2563eb']
     });
     machineUsageChart.render();
 
-    // Dashboard update function for dynamic content remains the same.
+    // Update Data Function
     function updateDashboard() {
         fetch(`/camera${camera_id}/data`)
             .then(response => response.json())
             .then(data => {
-                const peopleData = data.people_data.map(item => ({
-                    x: new Date(Object.keys(item)[0]).getTime(),
-                    y: Object.values(item)[0]
-                }));
-                peopleCountChart.updateSeries([{ data: peopleData }]);
+                // Update people count chart
+                const peopleData = data.people_data.map(item => {
+                    const [timestamp, count] = Object.entries(item)[0];
+                    return {
+                        x: new Date(timestamp).getTime(),
+                        y: count
+                    };
+                });
+                peopleCountChart.updateSeries([{
+                    name: 'People Count',
+                    data: peopleData
+                }]);
 
-                if (data.machine_data?.usage) {
-                    const usageData = data.machine_data.usage.data.map(item => ({
-                        x: new Date(Object.keys(item)[0]).toLocaleTimeString(),
-                        y: Object.values(item)[0] ? 100 : 0
-                    }));
-                    machineUsageChart.updateSeries([{ data: usageData }]);
-                }
-
-                const statusContainer = document.getElementById('machineStatus');
-                let statusHTML = '';
-                if (data.operation_data?.length) {
-                    data.operation_data.forEach(op => {
-                        const [timestamp, status] = Object.entries(op)[0];
-                        statusHTML += `
-                            <div class="machine-status ${status ? 'active' : 'warning'}">
-                                <h6>{{ machine_name }}</h6>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span>Status: <strong>${status ? 'Active' : 'Inactive'}</strong></span>
-                                    <span class="badge ${status ? 'bg-success' : 'bg-warning'}">
-                                        ${status ? 'Normal' : 'Warning'}
-                                    </span>
-                                </div>
-                            </div>`;
+                // Update machine usage if available
+                const machineUsageCard = document.getElementById('machineUsageCard');
+                if (data.machine_data && data.machine_data.usage) {
+                    const usageData = data.machine_data.usage.data.map(item => {
+                        const [timestamp, value] = Object.entries(item)[0];
+                        // Format timestamp for display
+                        const date = new Date(timestamp);
+                        const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        
+                        return {
+                            x: formattedTime,
+                            y: value ? 100 : 0
+                        };
                     });
+                    
+                    if (usageData.length > 0) {
+                        machineUsageCard.classList.remove('hidden');
+                        machineUsageChart.updateSeries([{
+                            name: 'Machine Usage',
+                            data: usageData
+                        }]);
+                        emptyDataCount = 0;
+                    } else {
+                        emptyDataCount++;
+                        if (emptyDataCount >= MAX_EMPTY_DATA_ATTEMPTS) {
+                            machineUsageCard.classList.add('hidden');
+                        }
+                    }
+                } else {
+                    emptyDataCount++;
+                    if (emptyDataCount >= MAX_EMPTY_DATA_ATTEMPTS) {
+                        machineUsageCard.classList.add('hidden');
+                    }
                 }
-                statusContainer.innerHTML = statusHTML;
+
+                // Update machine status
+                updateMachineStatus(data);
             })
-            .catch(console.error);
+            .catch(error => {
+                console.error('Error fetching data:', error);
+            });
     }
 
-    document.getElementById('settingsBtn').addEventListener('click', () => {
-        new bootstrap.Modal(document.getElementById('settingsModal')).show();
-    });
+    function updateMachineStatus(data) {
+        const statusContainer = document.getElementById('machineStatus');
+        let statusHTML = '';
 
-    videoElement.addEventListener('click', function() {
-        if (videoElement.paused) {
-            videoElement.play().catch(() => {
-                updateStreamStatus('Click to start playback', true);
+        if (data.operation_data && data.operation_data.length > 0) {
+            const lastStatus = data.operation_data[data.operation_data.length - 1];
+            const [timestamp, status] = Object.entries(lastStatus)[0];
+            
+            statusHTML += `
+                <div class="machine-status ${status ? 'active' : 'warning'}">
+                    <h6>${camera_id === '301' ? 'Pouring System' : 
+                         camera_id === '501' ? 'Filter System' : 
+                         camera_id === '701' ? 'Filling System' : 'System'}</h6>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>Status: <strong>${status ? 'Operating' : 'Inactive'}</strong></span>
+                        <span class="badge ${status ? 'bg-success' : 'bg-warning'}">
+                            ${status ? 'Active' : 'Warning'}
+                        </span>
+                    </div>
+                </div>`;
+        }
+
+        if (data.machine_data) {
+            Object.entries(data.machine_data).forEach(([machine, machineData]) => {
+                if (machine !== 'usage' && machineData.data) {
+                    const lastStatus = machineData.data[machineData.data.length - 1];
+                    const [timestamp, status] = Object.entries(lastStatus)[0];
+                    
+                    statusHTML += `
+                        <div class="machine-status ${status ? 'active' : 'warning'}">
+                            <h6>Machine ${machine}</h6>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>Status: <strong>${status ? 'Operating' : 'Inactive'}</strong></span>
+                                <span class="badge ${status ? 'bg-success' : 'bg-warning'}">
+                                    ${status ? 'Active' : 'Warning'}
+                                </span>
+                            </div>
+                        </div>`;
+                }
             });
         }
-    });
 
+        statusContainer.innerHTML = statusHTML;
+    }
+
+    // Load heatmap
+    const heatmapContainer = document.querySelector('.heatmap-container');
+    const heatmapImg = document.createElement('img');
+    heatmapImg.src = `/camera${camera_id}/heatmap`;
+    heatmapImg.classList.add('heatmap-image');
+    heatmapContainer.appendChild(heatmapImg);
+
+    // Settings Modal
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsModal = new bootstrap.Modal(document.getElementById('settingsModal'));
+    
+    settingsBtn.addEventListener('click', () => settingsModal.show());
+
+    // Update dashboard periodically
     updateDashboard();
     setInterval(updateDashboard, 5000);
 });

@@ -1,0 +1,15 @@
+[Unit]
+Description=Camera HLS Streaming Service
+After=network.target
+
+[Service]
+Type=forking
+User=root
+Group=root
+WorkingDirectory=/var/www/html/hls
+ExecStart=/usr/local/bin/stream_cameras.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target 

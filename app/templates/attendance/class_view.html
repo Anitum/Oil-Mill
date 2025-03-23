@@ -5,7 +5,12 @@
 <style>
 .attendance-calendar .day {
     aspect-ratio: 1;
-    min-height: 100px;
+    min-height: 80px;
+    transition: all 0.2s ease;
+}
+.attendance-calendar .day:hover {
+    background-color: rgba(0,0,0,0.03);
+    transform: scale(1.02);
 }
 .status-dot {
     width: 8px;
@@ -18,16 +23,30 @@
     border-radius: 6px;
     font-size: 0.9rem;
 }
+@media (max-width: 768px) {
+    .attendance-calendar .day {
+        min-height: 60px;
+    }
+    .btn-responsive-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        width: 100%;
+    }
+    .btn-responsive-group .btn {
+        margin: 0 !important;
+    }
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid px-lg-4 py-3">
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-            <h1 class="mb-0">Class Attendance</h1>
-            <p class="text-muted">
+            <h1 class="h2 mb-0 fw-bold">Class Attendance</h1>
+            <p class="text-muted mb-0">
                 {{ class_obj.name }}-{{ class_obj.section }} | 
                 Teacher: {% if class_obj.primary_teacher %}
                     {{ class_obj.primary_teacher.full_name }}
@@ -36,32 +55,36 @@
                 {% endif %}
             </p>
         </div>
-        <div class="btn-group">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#markAttendanceModal">
-                Mark Attendance
+        <div class="btn-responsive-group">
+            <button type="button" class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#markAttendanceModal">
+                <i class="fas fa-check-circle me-1"></i> Mark Attendance
             </button>
-            <button type="button" class="btn btn-outline-success" onclick="exportAttendance()">
-                Export Report
+            <button type="button" class="btn btn-outline-success shadow-sm" onclick="exportAttendance()">
+                <i class="fas fa-file-export me-1"></i> Export Report
             </button>
-            <a href="{{ url_for('class.view_class', class_id=class_obj.id) }}" class="btn btn-secondary">
-                Back to Class
+            <a href="{{ url_for('class.view_class', class_id=class_obj.id) }}" class="btn btn-secondary shadow-sm">
+                <i class="fas fa-arrow-left me-1"></i> Back to Class
             </a>
         </div>
     </div>
 
     <!-- Stats Cards -->
-    <div class="row mb-4">
+    <div class="row g-3 mb-4">
         <!-- Today's Stats -->
-        <div class="col-md-3">
-            <div class="card bg-primary bg-opacity-10 h-100">
+        <div class="col-md-6 col-lg-3">
+            <div class="card bg-primary bg-opacity-10 h-100 border-0 shadow-sm">
                 <div class="card-body">
-                    <h6 class="text-primary card-subtitle mb-2">Today's Attendance</h6>
-                    <h3 class="card-title mb-0">
+                    <h6 class="text-primary card-subtitle mb-2 fw-bold">Today's Attendance</h6>
+                    <h3 class="card-title mb-0 fw-bold">
                         {{ attendance_stats.present }}/{{ attendance_stats.total }}
                     </h3>
                     <div class="mt-2">
-                        <div class="progress" style="height: 4px;">
-                            <div class="progress-bar bg-primary" 
+                        <div class="progress rounded-pill" style="height: 6px;">
+                            <div class="progress-bar bg-primary rounded-pill" 
+                                 role="progressbar"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100"
+                                 aria-valuenow="{{ (attendance_stats.present / attendance_stats.total * 100)|round|int if attendance_stats.total > 0 else 0 }}"
                                  style="width: {{ (attendance_stats.present / attendance_stats.total * 100)|round|int if attendance_stats.total > 0 else 0 }}%">
                             </div>
                         </div>
@@ -72,14 +95,20 @@
         </div>
 
         <!-- Monthly Average -->
-        <div class="col-md-3">
-            <div class="card bg-success bg-opacity-10 h-100">
+        <div class="col-md-6 col-lg-3">
+            <div class="card bg-success bg-opacity-10 h-100 border-0 shadow-sm">
                 <div class="card-body">
-                    <h6 class="text-success card-subtitle mb-2">Monthly Average</h6>
-                    <h3 class="card-title mb-0">{{ monthly_average|round|int }}%</h3>
+                    <h6 class="text-success card-subtitle mb-2 fw-bold">Monthly Average</h6>
+                    <h3 class="card-title mb-0 fw-bold">{{ monthly_average|round|int }}%</h3>
                     <div class="mt-2">
-                        <div class="progress" style="height: 4px;">
-                            <div class="progress-bar bg-success" style="width: {{ monthly_average|round|int }}%"></div>
+                        <div class="progress rounded-pill" style="height: 6px;">
+                            <div class="progress-bar bg-success rounded-pill" 
+                                 role="progressbar"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100"
+                                 aria-valuenow="{{ monthly_average|round|int }}"
+                                 style="width: {{ monthly_average|round|int }}%"></div>
+                                 ></div>
                         </div>
                         <small class="text-muted">This Month</small>
                     </div>
@@ -88,11 +117,11 @@
         </div>
 
         <!-- Late Arrivals -->
-        <div class="col-md-3">
-            <div class="card bg-warning bg-opacity-10 h-100">
+        <div class="col-md-6 col-lg-3">
+            <div class="card bg-warning bg-opacity-10 h-100 border-0 shadow-sm">
                 <div class="card-body">
-                    <h6 class="text-warning card-subtitle mb-2">Late Arrivals</h6>
-                    <h3 class="card-title mb-0">{{ attendance_stats.late }}</h3>
+                    <h6 class="text-warning card-subtitle mb-2 fw-bold">Late Arrivals</h6>
+                    <h3 class="card-title mb-0 fw-bold">{{ attendance_stats.late }}</h3>
                     <div class="mt-2">
                         <small class="text-muted">
                             {{ (attendance_stats.late / attendance_stats.present * 100)|round|int if attendance_stats.present > 0 else 0 }}% of present students
@@ -103,11 +132,11 @@
         </div>
 
         <!-- Leaves/Absences -->
-        <div class="col-md-3">
-            <div class="card bg-danger bg-opacity-10 h-100">
+        <div class="col-md-6 col-lg-3">
+            <div class="card bg-danger bg-opacity-10 h-100 border-0 shadow-sm">
                 <div class="card-body">
-                    <h6 class="text-danger card-subtitle mb-2">On Leave</h6>
-                    <h3 class="card-title mb-0">{{ attendance_stats.leave }}</h3>
+                    <h6 class="text-danger card-subtitle mb-2 fw-bold">On Leave</h6>
+                    <h3 class="card-title mb-0 fw-bold">{{ attendance_stats.leave }}</h3>
                     <div class="mt-2">
                         <small class="text-muted">Approved leaves today</small>
                     </div>
@@ -117,12 +146,12 @@
     </div>
 
     <!-- Main Content -->
-    <div class="row">
+    <div class="row g-3">
         <!-- Calendar View -->
-        <div class="col-md-8 mb-4">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Monthly Overview</h5>
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <h5 class="card-title mb-0 fw-bold">Monthly Overview</h5>
                     <div class="btn-group btn-group-sm">
                         <button type="button" class="btn btn-outline-secondary" onclick="previousMonth()">
                             <i class="fas fa-chevron-left"></i>
@@ -141,7 +170,7 @@
                         <div class="row text-center mb-2">
                             {% for day in ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] %}
                             <div class="col">
-                                <small class="text-muted">{{ day }}</small>
+                                <small class="text-muted fw-bold">{{ day }}</small>
                             </div>
                             {% endfor %}
                         </div>
@@ -151,8 +180,8 @@
                         <div class="row g-2">
                             {% for day in week %}
                             <div class="col">
-                                <div class="day border rounded p-1 {% if day.date == today %}bg-light{% endif %}">
-                                    <small class="text-muted d-block mb-1">{{ day.date.day }}</small>
+                                <div class="day border rounded p-1 {% if day.date == today %}bg-light border-primary{% endif %}">
+                                    <small class="text-muted d-block mb-1 fw-bold">{{ day.date.day }}</small>
                                     {% if day.stats %}
                                     <div class="attendance-summary bg-light p-1">
                                         <small class="d-block">
@@ -182,31 +211,31 @@
         </div>
 
         <!-- Student List -->
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Daily Status</h5>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title mb-0 fw-bold">Daily Status</h5>
                 </div>
                 <div class="card-body p-0">
                     <div class="list-group list-group-flush">
                         {% for record in attendance_records %}
-                        <div class="list-group-item">
+                        <div class="list-group-item list-group-item-action border-0 py-3 px-3">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="mb-1">{{ record.student.full_name }}</h6>
+                                    <h6 class="mb-1 fw-bold">{{ record.student.full_name }}</h6>
                                     {% if record.arrival_time %}
                                     <small class="text-muted">
                                         Arrived: {{ record.arrival_time.strftime('%H:%M') }}
                                         {% if record.arrival_time > record.expected_arrival_time %}
-                                        <span class="text-warning">(Late)</span>
+                                        <span class="text-warning fw-bold">(Late)</span>
                                         {% endif %}
                                     </small>
                                     {% endif %}
                                 </div>
-                                <span class="badge {% if record.status == 'PRESENT' %}bg-success
+                                <span class="badge rounded-pill {% if record.status == 'PRESENT' %}bg-success
                                                {% elif record.status == 'ABSENT' %}bg-danger
                                                {% elif record.status == 'LEAVE' %}bg-info
-                                               {% else %}bg-warning{% endif %}">
+                                               {% else %}bg-warning{% endif %} px-3 py-2">
                                     {{ record.status }}
                                 </span>
                             </div>
@@ -215,7 +244,7 @@
                             {% endif %}
                         </div>
                         {% else %}
-                        <div class="list-group-item text-center py-4">
+                        <div class="list-group-item text-center py-5">
                             <p class="text-muted mb-0">No attendance records for today</p>
                         </div>
                         {% endfor %}
@@ -228,18 +257,18 @@
 
 <!-- Mark Attendance Modal -->
 <div class="modal fade" id="markAttendanceModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
             <div class="modal-header">
-                <h5 class="modal-title">Mark Class Attendance</h5>
+                <h5 class="modal-title fw-bold">Mark Class Attendance</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="classAttendanceForm" method="post" action="{{ url_for('attendance.mark_student_attendance') }}">
                     <input type="hidden" name="date" value="{{ selected_date.strftime('%Y-%m-%d') }}">
                     <div class="table-responsive">
-                        <table class="table">
-                            <thead>
+                        <table class="table table-hover">
+                            <thead class="table-light">
                                 <tr>
                                     <th>Student</th>
                                     <th style="width: 120px;">Status</th>
@@ -250,7 +279,7 @@
                             <tbody>
                                 {% for student in class_obj.students %}
                                 <tr>
-                                    <td>{{ student.full_name }}</td>
+                                    <td class="align-middle fw-medium">{{ student.full_name }}</td>
                                     <td>
                                         <select name="status_{{ student.id }}" class="form-select form-select-sm">
                                             <option value="PRESENT">Present</option>
@@ -276,8 +305,10 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitAttendance()">Save Attendance</button>
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitAttendance()">
+                    <i class="fas fa-save me-1"></i> Save Attendance
+                </button>
             </div>
         </div>
     </div>
@@ -288,20 +319,41 @@
 <script>
 function previousMonth() {
     // Add navigation logic
+    console.log('Previous month clicked');
+    // Implement AJAX or form submission here
 }
 
 function nextMonth() {
     // Add navigation logic
+    console.log('Next month clicked');
+    // Implement AJAX or form submission here
 }
 
 function submitAttendance() {
     const form = document.getElementById('classAttendanceForm');
+    // Show loading indicator
+    const button = document.querySelector('.modal-footer .btn-primary');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Saving...';
+    button.disabled = true;
+    
+    // Submit the form
     form.submit();
 }
 
 function exportAttendance() {
-    // Add export logic
-    alert('Generating attendance report...');
+    // Add export logic with loading state
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Generating...';
+    btn.disabled = true;
+    
+    // Simulate processing
+    setTimeout(() => {
+        alert('Attendance report generated successfully!');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }, 1500);
 }
 </script>
 {% endblock %}

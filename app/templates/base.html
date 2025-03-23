@@ -13,39 +13,245 @@
     <style>
         :root {
             --sidebar-bg: #1a4731;
-            /* Changed to a darker green */
             --sidebar-hover: rgba(255, 255, 255, 0.1);
             --active-link: #2d8659;
-            /* Changed to green */
             --content-bg: #f8f9fa;
+            --sidebar-width: 250px;
+            --sidebar-collapsed-width: 70px;
+            --transition-speed: 0.3s;
+            --border-radius: 8px;
         }
 
-        /* Rest of the styles remain same as before */
+        body {
+            overflow-x: hidden;
+            background-color: var(--content-bg);
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        /* Sidebar styles */
         .sidebar {
             min-height: 100vh;
             background-color: var(--sidebar-bg);
+            background-image: linear-gradient(to bottom, #16412c, #1a4731);
             padding-top: 1rem;
             position: fixed;
             z-index: 1000;
+            width: var(--sidebar-width);
+            transition: all var(--transition-speed) ease;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: var(--active-link) var(--sidebar-bg);
         }
 
-        /* Calendar */
-        .wrapper {
-            width: 99%;
-            background: #fff;
+        .sidebar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: var(--sidebar-bg);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background-color: var(--active-link);
             border-radius: 10px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
-            margin-top: 10px;
-            padding-bottom: 10px;
-            user-select: none;
+        }
+
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed-width);
+        }
+
+        .sidebar-logo {
+            padding: 0.5rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-logo h4 {
+            margin-bottom: 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+            opacity: 1;
+            transition: opacity var(--transition-speed) ease;
+        }
+
+        .sidebar.collapsed .sidebar-logo h4 {
+            opacity: 0;
+        }
+
+        .collapse-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.3rem;
+            border-radius: 4px;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .collapse-btn:hover {
+            background-color: var(--sidebar-hover);
+            color: white;
+        }
+
+        .sidebar.collapsed .collapse-btn i {
+            transform: rotate(180deg);
+        }
+
+        /* Navigation section styles */
+        .nav-section {
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-section-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.5);
+            padding: 0 1.5rem;
+            margin-bottom: 0.5rem;
+            opacity: 1;
+            transition: opacity var(--transition-speed) ease;
+        }
+
+        .sidebar.collapsed .nav-section-title {
+            opacity: 0;
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 0.7rem 1.5rem;
+            margin: 0.1rem 0.5rem;
+            border-radius: var(--border-radius);
+            transition: all var(--transition-speed) ease;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .sidebar .nav-link:hover {
+            color: #fff;
+            background-color: var(--sidebar-hover);
+            transform: translateX(3px);
+        }
+
+        .sidebar .nav-link.active {
+            background-color: var(--active-link);
+            color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transform: translateX(0);
+        }
+
+        .sidebar .nav-link i {
+            min-width: 24px;
+            margin-right: 10px;
+            text-align: center;
+            font-size: 1rem;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .sidebar.collapsed .nav-link {
+            padding: 0.7rem;
+            justify-content: center;
+        }
+
+        .sidebar.collapsed .nav-link i {
+            margin-right: 0;
+            font-size: 1.1rem;
+        }
+
+        .sidebar .nav-link span {
+            opacity: 1;
+            transition: opacity var(--transition-speed) ease;
+        }
+
+        .sidebar.collapsed .nav-link span {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            overflow: hidden;
+        }
+
+        /* Mobile toggle button */
+        .sidebar-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1001;
+            background: var(--sidebar-bg);
+            border: none;
+            color: white;
+            padding: 0.5rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            display: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: all var(--transition-speed) ease;
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--active-link);
+        }
+
+        /* Main content styles */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            transition: margin var(--transition-speed) ease;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .main-content.expanded {
+            margin-left: var(--sidebar-collapsed-width);
+        }
+
+        /* Calendar styles */
+        .calendar-container {
+            margin-top: auto;
+            padding: 0.5rem 1rem;
+        }
+
+        .wrapper {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--border-radius);
+            margin: 0.5rem auto;
+            padding: 0.5rem;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all var(--transition-speed) ease;
+        }
+
+        .sidebar.collapsed .wrapper {
+            padding: 0.2rem;
         }
 
         .wrapper header {
             display: flex;
             align-items: center;
-            padding: 5px 10px 10px;
+            padding: 0.3rem;
             justify-content: space-between;
-            font-size: 10px;
+        }
+
+        header .current-date {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #fff;
+            transition: opacity var(--transition-speed) ease, font-size var(--transition-speed) ease;
+        }
+
+        .sidebar.collapsed .current-date {
+            font-size: 0.7rem;
+            opacity: 0.7;
         }
 
         header .icons {
@@ -53,26 +259,29 @@
         }
 
         header .icons span {
-            height: 30px;
-            width: 30px;
+            height: 25px;
+            width: 25px;
             margin: 0 2px;
             cursor: pointer;
-            color: #878787;
-            text-align: center;
-            line-height: 25px;
-            font-size: 30px;
+            color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
             user-select: none;
             border-radius: 50%;
+            transition: all var(--transition-speed) ease;
+        }
+
+        .sidebar.collapsed header .icons span {
+            height: 20px;
+            width: 20px;
+            font-size: 0.8rem;
         }
 
         header .icons span:hover {
-            background: #f2f2f2;
-        }
-
-        header .current-date {
-            margin-top: 1rem;
-            font-size: 1.2rem;
-            font-weight: 500;
+            background: var(--sidebar-hover);
+            color: #fff;
         }
 
         .calendar ul {
@@ -80,34 +289,47 @@
             flex-wrap: wrap;
             list-style: none;
             text-align: center;
-            margin-left: -26px;
+            margin: 0;
+            padding: 0;
         }
 
         .calendar .days {
-            margin-bottom: 4px;
+            margin-bottom: 0;
         }
 
         .calendar li {
-            color: #333;
+            color: rgba(255, 255, 255, 0.8);
             width: calc(100% / 7);
-            font-size: 1.07rem;
+            font-size: 0.7rem;
+            padding: 0.2rem 0;
+            transition: font-size var(--transition-speed) ease;
+        }
+
+        .sidebar.collapsed .calendar li {
+            font-size: 0.65rem;
         }
 
         .calendar .weeks li {
-            font-weight: 400;
+            font-weight: 500;
             cursor: default;
-            justify-content: space-between;
-            padding-inline: 2px;
         }
 
         .calendar .days li {
             z-index: 1;
             cursor: pointer;
             position: relative;
+            height: 22px;
+            line-height: 22px;
+            transition: height var(--transition-speed) ease, line-height var(--transition-speed) ease;
+        }
+
+        .sidebar.collapsed .calendar .days li {
+            height: 18px;
+            line-height: 18px;
         }
 
         .days li.inactive {
-            color: #aaa;
+            color: rgba(255, 255, 255, 0.3);
         }
 
         .days li.active {
@@ -119,175 +341,223 @@
             content: "";
             left: 50%;
             top: 50%;
-            height: 26px;
-            width: 26px;
+            height: 20px;
+            width: 20px;
             z-index: -1;
             border-radius: 50%;
             transform: translate(-50%, -50%);
+            transition: all var(--transition-speed) ease;
+        }
+
+        .sidebar.collapsed .days li::before {
+            height: 16px;
+            width: 16px;
         }
 
         .days li.active::before {
-            background: #9B59B6;
+            background: var(--active-link);
         }
 
         .days li:not(.active):hover::before {
-            background: #f2f2f2;
+            background: var(--sidebar-hover);
+        }
+
+        /* Responsive styles */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: var(--sidebar-width);
+            }
+            
+            .main-content {
+                margin-left: var(--sidebar-width);
+            }
+            
+            .main-content.expanded {
+                margin-left: var(--sidebar-width);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .main-content.expanded {
+                margin-left: 0;
+            }
+
+            .sidebar-toggle {
+                display: block;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="row">
+    <button class="sidebar-toggle" id="sidebarToggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="container-fluid p-0">
+        <div class="row g-0">
             <!-- Sidebar -->
-            <div class="col-md-2 px-0 position-fixed sidebar">
-                <div class="text-center mb-4">
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-logo">
                     <h4 class="text-white">Oil Mill ERP</h4>
+                    <button class="collapse-btn d-none d-md-flex" id="collapseBtn">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
                 </div>
 
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}"
-                            href="{{ url_for('main.index') }}">
-                            <i class="fas fa-home"></i> Dashboard
-                        </a>
-                    </li>
-                    
-<!-- Camera 1 - Production Monitoring -->
+                <!-- Main Navigation Section -->
+                <div class="nav-section">
+                    <h6 class="nav-section-title">Main</h6>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}"
+                                href="{{ url_for('main.index') }}">
+                                <i class="fas fa-home"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint and 'staff.' in request.endpoint %}active{% endif %}"
+                               href="{{ url_for('staff.list_staff') }}">
+                                <i class="fas fa-users"></i>
+                                <span>Staff</span>
+                            </a>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'attendance.' in request.endpoint %}active{% endif %}" 
+                               href="{{ url_for('attendance.dashboard') }}">
+                                <i class="fas fa-calendar-check"></i>
+                                <span>Attendance</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
 
-<li class="nav-item">
-    <a class="nav-link {% if request.endpoint and 'staff.' in request.endpoint %}active{% endif %}"
-       href="{{ url_for('staff.list_staff') }}">
-        <i class="fas fa-chalkboard-teacher"></i> Staff
-    </a>
-</li>
-                    <!-- Attendance -->
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'attendance.' in request.endpoint %}active{% endif %}" 
-                           href="{{ url_for('attendance.dashboard') }}">
-                            <i class="fas fa-calendar-check"></i> Attendance
-                        </a>
-                    </li>
+                <!-- Camera Section -->
+                <div class="nav-section">
+                    <h6 class="nav-section-title">Camera Systems</h6>
+                    <ul class="nav flex-column">
+                        <!-- Camera 2 - Quality Control -->
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'camera2.' in request.endpoint %}active{% endif %}"
+                                href="{{ url_for('camera201.dashboard') }}">
+                                <i class="fas fa-camera"></i>
+                                <span>Quality Control</span>
+                            </a>
+                        </li>
 
+                        <!-- Camera 3 - Storage Monitoring -->
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'camera3.' in request.endpoint %}active{% endif %}"
+                                href="{{ url_for('camera301.dashboard') }}">
+                                <i class="fas fa-camera"></i>
+                                <span>Storage Area</span>
+                            </a>
+                        </li>
 
-                    <!-- Camera 2 - Quality Control -->
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'camera2.' in request.endpoint %}active{% endif %}"
-                            href="{{ url_for('camera201.dashboard') }}">
-                            <i class="fas fa-camera"></i> Camera 2
-                        </a>
-                    </li>
+                        <!-- Camera 4 - Process Control -->
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'camera4.' in request.endpoint %}active{% endif %}"
+                                href="{{ url_for('camera401.dashboard') }}">
+                                <i class="fas fa-camera"></i>
+                                <span>Process Control</span>
+                            </a>
+                        </li>
 
-                    <!-- Camera 3 - Storage Monitoring -->
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'camera3.' in request.endpoint %}active{% endif %}"
-                            href="{{ url_for('camera301.dashboard') }}">
-                            <i class="fas fa-camera"></i> Camera 3
-                        </a>
-                    </li>
+                        <!-- Camera 5 - Safety Monitoring -->
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'camera5.' in request.endpoint %}active{% endif %}"
+                                href="{{ url_for('camera501.dashboard') }}">
+                                <i class="fas fa-camera"></i>
+                                <span>Safety Monitoring</span>
+                            </a>
+                        </li>
 
-                    <!-- Camera 4 - Process Control -->
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'camera4.' in request.endpoint %}active{% endif %}"
-                            href="{{ url_for('camera401.dashboard') }}">
-                            <i class="fas fa-camera"></i> Camera 4
-                        </a>
-                    </li>
+                        <!-- Camera 6 - Packaging Area -->
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'camera6.' in request.endpoint %}active{% endif %}"
+                                href="{{ url_for('camera601.dashboard') }}">
+                                <i class="fas fa-camera"></i>
+                                <span>Packaging Area</span>
+                            </a>
+                        </li>
 
-                    <!-- Camera 5 - Safety Monitoring -->
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'camera5.' in request.endpoint %}active{% endif %}"
-                            href="{{ url_for('camera501.dashboard') }}">
-                            <i class="fas fa-camera"></i> Camera 5
-                        </a>
-                    </li>
+                        <!-- Camera 7 - Loading Area -->
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'camera7.' in request.endpoint %}active{% endif %}"
+                                href="{{ url_for('camera701.dashboard') }}">
+                                <i class="fas fa-camera"></i>
+                                <span>Loading Area</span>
+                            </a>
+                        </li>
 
-                    <!-- Camera 6 - Packaging Area -->
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'camera6.' in request.endpoint %}active{% endif %}"
-                            href="{{ url_for('camera601.dashboard') }}">
-                            <i class="fas fa-camera"></i> Camera 6
-                        </a>
-                    </li>
+                        <!-- Camera 8 - Raw Material Area -->
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'camera8.' in request.endpoint %}active{% endif %}"
+                                href="{{ url_for('camera801.dashboard') }}">
+                                <i class="fas fa-camera"></i>
+                                <span>Raw Materials</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
 
-                    <!-- Camera 7 - Loading Area -->
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'camera7.' in request.endpoint %}active{% endif %}"
-                            href="{{ url_for('camera701.dashboard') }}">
-                            <i class="fas fa-camera"></i> Camera 7
-                        </a>
-                    </li>
-
-                    <!-- Camera 8 - Raw Material Area -->
-                    <li class="nav-item">
-                        <a class="nav-link {% if 'camera8.' in request.endpoint %}active{% endif %}"
-                            href="{{ url_for('camera801.dashboard') }}">
-                            <i class="fas fa-camera"></i> Camera 8
-                        </a>
-                    </li>
-
-
-                </ul>
-                <div class="wrapper">
-                    <header>
-                        <div class="icons">
-                            <span id="prev" class="material-symbols-rounded"><</span>
+                <!-- Calendar at the bottom -->
+                <div class="calendar-container">
+                    <div class="wrapper">
+                        <header>
+                            <div class="icons">
+                                <span id="prev" class="material-symbols-rounded"><i class="fas fa-chevron-left"></i></span>
+                            </div>
+                            <p class="current-date"></p>
+                            <div class="icons">
+                                <span id="next" class="material-symbols-rounded"><i class="fas fa-chevron-right"></i></span>
+                            </div>
+                        </header>
+                        <div class="calendar">
+                            <ul class="weeks">
+                                <li>S</li>
+                                <li>M</li>
+                                <li>T</li>
+                                <li>W</li>
+                                <li>T</li>
+                                <li>F</li>
+                                <li>S</li>
+                            </ul>
+                            <ul class="days"></ul>
                         </div>
-                        <p class="current-date"></p>
-                        <div class="icons">
-                            <span id="next" class="material-symbols-rounded">></span>
-                        </div>
-                    </header>
-                    <div class="calendar">
-                        <ul class="weeks">
-                            <li>Sun</li>
-                            <li>Mon</li>
-                            <li>Tue</li>
-                            <li>Wed</li>
-                            <li>Thu</li>
-                            <li>Fri</li>
-                            <li>Sat</li>
-                        </ul>
-                        <ul class="days"></ul>
                     </div>
                 </div>
             </div>
+
             <!-- Main Content -->
-
-            <div class="col-md-10 offset-md-2 main-content">
+            <div class="col main-content" id="mainContent">
                 <!-- Top Navbar -->
-                <nav class="navbar navbar-expand-lg navbar-light">
+                <nav class="navbar navbar-expand-lg navbar-light bg-white rounded shadow-sm mb-4">
                     <div class="container-fluid">
-                        <!-- Emergency Stop Button
-                        <button class="btn btn-danger me-3">
-                            <i class="fas fa-stop-circle"></i> 
-                        </button> -->
+                        <button class="btn btn-link text-dark d-md-none" id="mobileMenuToggle">
+                            <i class="fas fa-bars"></i>
+                        </button>
 
+                        <div class="navbar-brand d-md-none">
+                            Oil Mill ERP
+                        </div>
 
                         <!-- Right-aligned items -->
                         <ul class="navbar-nav ms-auto">
-                            <!-- Alerts -->
-                            <!-- <li class="nav-item dropdown me-3">
-                                <a class="nav-link" href="#" role="button" data-bs-toggle="dropdown">
-                                    <i class="fas fa-bell"></i>
-                                    <span
-                                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                        2
-                                    </span>
-                                </a>
-                                <div class="dropdown-menu dropdown-menu-end">
-                                    <h6 class="dropdown-header">System Alerts</h6>
-                                    <div class="dropdown-divider"></div>
-                                    <a class="dropdown-item" href="#">
-                                        <small class="text-muted">Just now</small>
-                                        <div>Temperature Alert - Press 1</div>
-                                    </a>
-                                    <a class="dropdown-item" href="#">
-                                        <small class="text-muted">5 minutes ago</small>
-                                        <div>Pressure Warning - Tank 2</div>
-                                    </a>
-                                </div>
-                            </li> -->
-
                             <!-- User Profile -->
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
@@ -323,7 +593,7 @@
                 </div>
 
                 <!-- Main Content Area -->
-                <div class="p-4">
+                <div class="p-3">
                     {% block content %}{% endblock %}
                 </div>
             </div>
@@ -335,13 +605,64 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     {% block extra_js %}{% endblock %}
 
-    <!-- Calendar -->
+    <!-- Sidebar and Calendar JavaScript -->
     <script>
+        // Sidebar Toggle Functionality for Mobile
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('show');
+        });
+
+        // Mobile menu toggle
+        document.getElementById('mobileMenuToggle')?.addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('show');
+        });
+
+        // Desktop sidebar collapse functionality
+        document.getElementById('collapseBtn').addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+            
+            // Store user preference
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+        });
+
+        // Restore user preference on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            
+            if (isCollapsed && window.innerWidth >= 768) {
+                sidebar.classList.add('collapsed');
+                mainContent.classList.add('expanded');
+            }
+        });
+
+        // Close sidebar on mobile when clicking outside
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(event.target) && 
+                sidebarToggle !== event.target &&
+                !sidebarToggle.contains(event.target) &&
+                mobileMenuToggle !== event.target &&
+                !mobileMenuToggle.contains(event.target) &&
+                sidebar.classList.contains('show')) {
+                sidebar.classList.remove('show');
+            }
+        });
+
+        // Calendar Script
         const daysTag = document.querySelector(".days"),
             currentDate = document.querySelector(".current-date"),
             prevNextIcon = document.querySelectorAll(".icons span");
 
-        // getting new date, current year and month
         let date = new Date(),
             currYear = date.getFullYear(),
             currMonth = date.getMonth();
@@ -350,48 +671,54 @@
             "August", "September", "October", "November", "December"];
 
         const renderCalendar = () => {
-            let firstDayofMonth = new Date(currYear, currMonth, 1).getDay(), // getting first day of month
-                lastDateofMonth = new Date(currYear, currMonth + 1, 0).getDate(), // getting last date of month
-                lastDayofMonth = new Date(currYear, currMonth, lastDateofMonth).getDay(), // getting last day of month
-                lastDateofLastMonth = new Date(currYear, currMonth, 0).getDate(); // getting last date of previous month
+            let firstDayofMonth = new Date(currYear, currMonth, 1).getDay(),
+                lastDateofMonth = new Date(currYear, currMonth + 1, 0).getDate(),
+                lastDayofMonth = new Date(currYear, currMonth, lastDateofMonth).getDay(),
+                lastDateofLastMonth = new Date(currYear, currMonth, 0).getDate();
             let liTag = "";
 
-            for (let i = firstDayofMonth; i > 0; i--) { // creating li of previous month last days
+            for (let i = firstDayofMonth; i > 0; i--) {
                 liTag += `<li class="inactive">${lastDateofLastMonth - i + 1}</li>`;
             }
 
-            for (let i = 1; i <= lastDateofMonth; i++) { // creating li of all days of current month
-                // adding active class to li if the current day, month, and year matched
+            for (let i = 1; i <= lastDateofMonth; i++) {
                 let isToday = i === date.getDate() && currMonth === new Date().getMonth()
                     && currYear === new Date().getFullYear() ? "active" : "";
                 liTag += `<li class="${isToday}">${i}</li>`;
             }
 
-            for (let i = lastDayofMonth; i < 6; i++) { // creating li of next month first days
+            for (let i = lastDayofMonth; i < 6; i++) {
                 liTag += `<li class="inactive">${i - lastDayofMonth + 1}</li>`
             }
-            currentDate.innerText = `${months[currMonth]} ${currYear}`; // passing current mon and yr as currentDate text
+            
+            // Show abbreviated month name for collapsed sidebar
+            const isSidebarCollapsed = document.getElementById('sidebar').classList.contains('collapsed');
+            const monthDisplay = isSidebarCollapsed ? 
+                months[currMonth].substring(0, 3) : 
+                `${months[currMonth]} ${currYear}`;
+                
+            currentDate.innerText = monthDisplay;
             daysTag.innerHTML = liTag;
         }
         renderCalendar();
 
-        prevNextIcon.forEach(icon => { // getting prev and next icons
-            icon.addEventListener("click", () => { // adding click event on both icons
-                // if clicked icon is previous icon then decrement current month by 1 else increment it by 1
+        prevNextIcon.forEach(icon => {
+            icon.addEventListener("click", () => {
                 currMonth = icon.id === "prev" ? currMonth - 1 : currMonth + 1;
 
-                if (currMonth < 0 || currMonth > 11) { // if current month is less than 0 or greater than 11
-                    // creating a new date of current year & month and pass it as date value
+                if (currMonth < 0 || currMonth > 11) {
                     date = new Date(currYear, currMonth, new Date().getDate());
-                    currYear = date.getFullYear(); // updating current year with new date year
-                    currMonth = date.getMonth(); // updating current month with new date month
+                    currYear = date.getFullYear();
+                    currMonth = date.getMonth();
                 } else {
-                    date = new Date(); // pass the current date as date value
+                    date = new Date();
                 }
-                renderCalendar(); // calling renderCalendar function
+                renderCalendar();
             });
         });
+        
+        // Update calendar display when sidebar is toggled
+        document.getElementById('collapseBtn').addEventListener('click', renderCalendar);
     </script>
 </body>
-
 </html>

@@ -2,33 +2,45 @@
 
 {% block title %}Attendance Dashboard - School ERP{% endblock %}
 
+{% block extra_css %}
+<style>
+.hover-shadow {
+    transition: all 0.2s ease;
+}
+.hover-shadow:hover {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid px-lg-4 py-3">
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-            <h1 class="mb-0">Attendance Dashboard</h1>
-            <p class="text-muted">{{ today.strftime('%A, %d %B %Y') }}</p>
+            <h1 class="h2 mb-0 fw-bold">Attendance Dashboard</h1>
+            <p class="text-muted mb-0">{{ today.strftime('%A, %d %B %Y') }}</p>
         </div>
-        <div class="btn-group">
-            <a href="{{ url_for('attendance.staff_attendance') }}" class="btn btn-primary">
-                Mark Staff Attendance
+        <div>
+            <a href="{{ url_for('attendance.staff_attendance') }}" class="btn btn-primary shadow-sm">
+                <i class="fas fa-user-check me-2"></i> Mark Staff Attendance
             </a>
         </div>
     </div>
 
     <!-- Quick Stats -->
-    <div class="row mb-4">
+    <div class="row g-3 mb-4">
         <!-- Staff Attendance Card -->
-        <div class="col-md-3">
-            <div class="card bg-success bg-opacity-10 h-100">
+        <div class="col-md-6 col-lg-4">
+            <div class="card bg-success bg-opacity-10 h-100 border-0 shadow-sm">
                 <div class="card-body">
-                    <h6 class="text-success card-subtitle mb-2">Staff Attendance</h6>
-                    <h3 class="card-title mb-0">{{ stats.staff_present }}/{{ stats.staff_total }}</h3>
+                    <h6 class="text-success card-subtitle mb-2 fw-bold">Staff Attendance</h6>
+                    <h3 class="card-title mb-0 fw-bold">{{ stats.staff_present }}/{{ stats.staff_total }}</h3>
                     <div class="mt-2">
                         {% set staff_percentage = (stats.staff_present / stats.staff_total * 100)|round|int if stats.staff_total > 0 else 0 %}
-                        <div class="progress" style="height: 4px;">
-                            <div class="progress-bar bg-success" role="progressbar" 
+                        <div class="progress rounded-pill" style="height: 6px;">
+                            <div class="progress-bar bg-success rounded-pill" role="progressbar" 
                                  style="width: {{ staff_percentage }}%" 
                                  aria-valuenow="{{ staff_percentage }}" 
                                  aria-valuemin="0" 
@@ -42,11 +54,11 @@
         </div>
 
         <!-- Absent Count Card -->
-        <div class="col-md-3">
-            <div class="card bg-danger bg-opacity-10 h-100">
+        <div class="col-md-6 col-lg-4">
+            <div class="card bg-danger bg-opacity-10 h-100 border-0 shadow-sm">
                 <div class="card-body">
-                    <h6 class="text-danger card-subtitle mb-2">Total Absent</h6>
-                    <h3 class="card-title mb-0">{{ stats.staff_absent }}</h3>
+                    <h6 class="text-danger card-subtitle mb-2 fw-bold">Total Absent</h6>
+                    <h3 class="card-title mb-0 fw-bold">{{ stats.staff_absent }}</h3>
                     <div class="mt-2">
                         <small class="text-muted">Staff: {{ stats.staff_absent }}</small>
                     </div>
@@ -55,11 +67,11 @@
         </div>
 
         <!-- Late Arrivals Card -->
-        <div class="col-md-3">
-            <div class="card bg-warning bg-opacity-10 h-100">
+        <div class="col-md-6 col-lg-4">
+            <div class="card bg-warning bg-opacity-10 h-100 border-0 shadow-sm">
                 <div class="card-body">
-                    <h6 class="text-warning card-subtitle mb-2">Late Arrivals</h6>
-                    <h3 class="card-title mb-0">{{ stats.late_arrivals }}</h3>
+                    <h6 class="text-warning card-subtitle mb-2 fw-bold">Late Arrivals</h6>
+                    <h3 class="card-title mb-0 fw-bold">{{ stats.late_arrivals }}</h3>
                     <div class="mt-2">
                         <small class="text-muted">Arrived after expected time</small>
                     </div>
@@ -69,26 +81,26 @@
     </div>
 
     <!-- Quick Actions and Recent Activity -->
-    <div class="row">
+    <div class="row g-3">
         <!-- Quick Actions -->
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Quick Actions</h5>
+        <div class="col-lg-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title mb-0 fw-bold">Quick Actions</h5>
                 </div>
                 <div class="card-body">
-                    <div class="list-group">
-                        <a href="{{ url_for('attendance.staff_attendance') }}" class="list-group-item list-group-item-action">
-                            <i class="fas fa-user-tie me-2"></i> Mark Staff Attendance
+                    <div class="list-group border-0">
+                        <a href="{{ url_for('attendance.staff_attendance') }}" class="list-group-item list-group-item-action border-0 rounded mb-2 hover-shadow">
+                            <i class="fas fa-user-tie me-2 text-primary"></i> Mark Staff Attendance
                         </a>
-                        <button type="button" class="list-group-item list-group-item-action" 
+                        <button type="button" class="list-group-item list-group-item-action border-0 rounded mb-2 hover-shadow" 
                                 onclick="exportAttendance()">
-                            <i class="fas fa-download me-2"></i> Export Today's Report
+                            <i class="fas fa-download me-2 text-success"></i> Export Today's Report
                         </button>
-                        <button type="button" class="list-group-item list-group-item-action" 
+                        <button type="button" class="list-group-item list-group-item-action border-0 rounded hover-shadow" 
                                 data-bs-toggle="modal" 
                                 data-bs-target="#biometricStatusModal">
-                            <i class="fas fa-fingerprint me-2"></i> Check Biometric Status
+                            <i class="fas fa-fingerprint me-2 text-info"></i> Check Biometric Status
                         </button>
                     </div>
                 </div>
@@ -96,15 +108,16 @@
         </div>
 
         <!-- Recent Activity -->
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Recent Activity</h5>
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 fw-bold">Recent Activity</h5>
+                    <span class="badge bg-primary rounded-pill px-3 py-2">Today</span>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
                                 <tr>
                                     <th>Time</th>
                                     <th>Name</th>
@@ -117,12 +130,12 @@
                                 {% for record in recent_activity %}
                                 <tr>
                                     <td>{{ record.arrival_time.strftime('%H:%M') if record.arrival_time else '-' }}</td>
-                                    <td>{{ record.staff_record.full_name }}</td>
+                                    <td class="fw-medium">{{ record.staff_record.full_name }}</td>
                                     <td>
-                                        <span class="badge bg-info">{{ record.entity_type }}</span>
+                                        <span class="badge bg-info rounded-pill">{{ record.entity_type }}</span>
                                     </td>
                                     <td>
-                                        <span class="badge {% if record.status == 'PRESENT' %}bg-success
+                                        <span class="badge rounded-pill {% if record.status == 'PRESENT' %}bg-success
                                                          {% elif record.status == 'ABSENT' %}bg-danger
                                                          {% else %}bg-warning{% endif %}">
                                             {{ record.status }}
@@ -132,7 +145,7 @@
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="5" class="text-center">No recent activity</td>
+                                    <td colspan="5" class="text-center py-4">No recent activity</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -146,22 +159,22 @@
 
 <!-- Biometric Status Modal -->
 <div class="modal fade" id="biometricStatusModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
             <div class="modal-header">
-                <h5 class="modal-title">Biometric Device Status</h5>
+                <h5 class="modal-title fw-bold">Biometric Device Status</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="list-group">
                     {% for device in biometric_devices %}
-                    <div class="list-group-item">
+                    <div class="list-group-item border-0 mb-2 rounded {% if device.status == 'ONLINE' %}bg-success bg-opacity-10{% else %}bg-danger bg-opacity-10{% endif %}">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h6 class="mb-1">Device {{ device.id }}</h6>
+                                <h6 class="mb-1 fw-bold">Device {{ device.id }}</h6>
                                 <small class="text-muted">{{ device.location }}</small>
                             </div>
-                            <span class="badge {% if device.status == 'ONLINE' %}bg-success{% else %}bg-danger{% endif %}">
+                            <span class="badge rounded-pill {% if device.status == 'ONLINE' %}bg-success{% else %}bg-danger{% endif %} px-3">
                                 {{ device.status }}
                             </span>
                         </div>
@@ -170,7 +183,7 @@
                         </small>
                     </div>
                     {% else %}
-                    <div class="list-group-item">
+                    <div class="list-group-item text-center py-4">
                         <p class="mb-0 text-muted">No biometric devices configured</p>
                     </div>
                     {% endfor %}
@@ -178,7 +191,9 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" onclick="refreshDevices()">Refresh Status</button>
+                <button type="button" class="btn btn-primary" onclick="refreshDevices()">
+                    <i class="fas fa-sync-alt me-1"></i> Refresh Status
+                </button>
             </div>
         </div>
     </div>
@@ -189,13 +204,33 @@
 {% block extra_js %}
 <script>
 function exportAttendance() {
-    // Add export functionality
-    alert('Generating attendance report...');
+    // Add export functionality with loading state
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Generating...';
+    btn.disabled = true;
+    
+    // Simulate processing
+    setTimeout(() => {
+        alert('Attendance report generated successfully!');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }, 1500);
 }
 
 function refreshDevices() {
-    // Add device refresh functionality
-    alert('Refreshing device status...');
+    // Add device refresh functionality with loading state
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Refreshing...';
+    btn.disabled = true;
+    
+    // Simulate processing
+    setTimeout(() => {
+        alert('Device status refreshed!');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }, 1500);
 }
 </script>
 {% endblock %}
